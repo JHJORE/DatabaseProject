@@ -6,6 +6,7 @@ def connect_db():
 def initialize_db():
     conn = connect_db()
     cursor = conn.cursor()
+    print("Connecting to Schema.sql")
     try:
         with open('schema.sql', 'r') as sql_file:
             sql_script = sql_file.read()
@@ -19,4 +20,5 @@ def initialize_db():
     finally:
         conn.commit()
         conn.close()
+
 
