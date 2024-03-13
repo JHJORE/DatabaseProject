@@ -15,13 +15,14 @@ def main_menu():
     
     print("""
         1. Initialize Database and Insert Initial Data
-        2. Insert Sold Chairs from Files
-        3. Buy Tickets
-        4. List Performances by Date
-        5. List Actors by Play
-        6. Performances by Ticket Sales
-        7. Find Co-actors
-        8. Exit
+        2. Insert data
+        3. Check Chair Availability
+        4. Buy Tickets
+        5. Find Actors by Play by date
+        6. What actors are playing in a given play
+        7. Most popular play
+        8. Find co-actors for a given actor
+        9. Exit
         """)
 
     choice = input("Enter your choice: ")
@@ -31,24 +32,29 @@ def main_menu():
         database.initialize_db()
 
     elif choice == '2':
-            # Insert sold chairs from files
+            # Insert data
         pass
     elif choice == '3':
-        # Implement buying tickets logic
+        # Implement check chair
         pass
     elif choice == '4':
-        # List performances by date
+        # Buy Tickets
         pass
     elif choice == '5':
-        # List actors by play
+        # Find actors by play by date
         pass
     elif choice == '6':
-        # List performances by ticket sales
+        # List What actors are playing in a given play
         pass
     elif choice == '7':
-        # Find co-actors for a given actor
+        # Most popular play
+        # 8. Find co-actors for a given actor for a given actor
         pass
     elif choice == '8':
+        # Most popular play
+        # 8. Find co-actors for a given actor for a given actor
+        pass
+    elif choice == '9':
         print("Exiting...")
         time.sleep(2)
         clear_screen()
