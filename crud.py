@@ -6,24 +6,24 @@ cursor = conn.cursor()
 #Create -------------------------------------
 
 def add_customer(conn, customer):
-    sql = ''' INSERT INTO CustomerProfile(CID, MobileNo, Name, Address)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO CustomerProfile( MobileNo, Name, Address)
+              VALUES(?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, customer)
     conn.commit()
     return cur.lastrowid
 
 def add_order(conn, order):
-    sql = ''' INSERT INTO CustomerOrder(OrderID, Time, Date, CID)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO CustomerOrder( Time, Date, CID)
+              VALUES(?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, order)
     conn.commit()
     return cur.lastrowid
 
 def add_ticket(conn, ticket):
-    sql = ''' INSERT INTO Ticket(TicketID, PerformanceID, SegmentID, OrderID, ChairNO, RowNO, Name, THID)
-              VALUES(?,?,?,?,?,?,?,?) '''
+    sql = ''' INSERT INTO Ticket( PerformanceID, SegmentID, OrderID, ChairNO, RowNO, Name, THID)
+              VALUES(?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, ticket)
     conn.commit()
@@ -38,8 +38,8 @@ def add_customer_group(conn, customer_group):
     return cur.lastrowid
 
 def add_performance(conn, performance):
-    sql = ''' INSERT INTO Performance(PerformanceID, Date, Time, PlayID)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO Performance( Date, Time, PlayID)
+              VALUES(?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, performance)
     conn.commit()
@@ -54,8 +54,8 @@ def add_has_group(conn, has_group):
     return cur.lastrowid  # Note: This return value might not be as meaningful due to the composite key
 
 def add_theater_play(conn, theater_play):
-    sql = ''' INSERT INTO TheaterPlay(PlayID, Season, Name, THID)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO TheaterPlay( Season, Name, THID)
+              VALUES(?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, theater_play)
     conn.commit()
@@ -70,8 +70,8 @@ def add_assigned_backstage(conn, assigned_backstage):
     return cur.lastrowid
 
 def add_employee(conn, employee):
-    sql = ''' INSERT INTO Employees(EID, Name, Email, Status)
-              VALUES(?,?,?,?) '''
+    sql = ''' INSERT INTO Employees(Name, Email, Phone, Status)
+              VALUES(?,?, ?,?) '''
     cur = conn.cursor()
     cur.execute(sql, employee)
     conn.commit()
@@ -109,7 +109,7 @@ def add_backstage_employee(conn, eid):
     conn.commit()
 
 def add_role(conn, role):
-    sql = ''' INSERT INTO Role(RoleID, Name) VALUES(?,?) '''
+    sql = ''' INSERT INTO Role(Name) VALUES(?) '''
     cur = conn.cursor()
     cur.execute(sql, role)
     conn.commit()
@@ -121,7 +121,7 @@ def add_role_in_act(conn, numid, roleid):
     conn.commit()
 
 def add_act(conn, act):
-    sql = ''' INSERT INTO Acts(NumID, Name) VALUES(?,?) '''
+    sql = ''' INSERT INTO Acts(Name) VALUES(?) '''
     cur = conn.cursor()
     cur.execute(sql, act)
     conn.commit()
@@ -133,7 +133,7 @@ def add_part_of(conn, numid, playid):
     conn.commit()
 
 def add_theater_hall(conn, theater_hall):
-    sql = ''' INSERT INTO TheaterHalls(THID, Name, Capacity) VALUES(?,?,?) '''
+    sql = ''' INSERT INTO TheaterHalls(Name, Capacity) VALUES(?,?) '''
     cur = conn.cursor()
     cur.execute(sql, theater_hall)
     conn.commit()
@@ -325,6 +325,12 @@ def get_roles_by_numid(conn, numid):
     cur = conn.cursor()
     cur.execute(sql, (numid,))
     return cur.fetchall()
+
+def get_actor_by_eid(conn, eid):
+    sql = ''' SELECT * FROM Actor WHERE EID=? '''
+    cur = conn.cursor()
+    cur.execute(sql, (eid,))
+    return cur.fetchone()
 
 def get_acts_by_roleid(conn, roleid):
     sql = ''' SELECT * FROM RoleInAct WHERE RoleID=? '''
