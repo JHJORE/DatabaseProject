@@ -1,13 +1,12 @@
 import sqlite3
 import database
 import CLI as interface
+import database as datab
 
 
-
-conn = sqlite3.connect('theater.db')  # This creates or opens the database file
-cursor = conn.cursor()
-cursor.execute('''Fill''')  
-conn.commit()  
+datab.initialize_db()
 
 if __name__ == "__main__":
-    interface.main_menu()
+    
+    pass
+   # interface.main_menu()
