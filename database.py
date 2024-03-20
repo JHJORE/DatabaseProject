@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import crud
 
 
 def connect_db():
@@ -24,19 +25,55 @@ def initialize_db():
         conn.commit()
         conn.close()
 
+
 def fill_db():
     conn = connect_db()
     cursor = conn.cursor()
     # Using csv file to fill the database
     folder_name = "csv_data/"
-    
+
     # Fill employees table
     print("Filling employees table")
     employees_kongsemne = pd.read_csv(folder_name + "employees_kongsemnene_filled.csv")
-    employees_stortst_av_alt = pd.read_csv(folder_name + "storst_av_alt_er_kjaerligheten_employees.csv")
+    employees_stortst_av_alt = pd.read_csv(
+        folder_name + "storst_av_alt_er_kjaerligheten_employees.csv"
+    )
+    # Concatenate the two dataframes
+    employees_all = pd.concat([employees_kongsemne, employees_stortst_av_alt])
 
-    raise NotImplemented
-    #finally:
+    # Drop duplicates based on 'group' and 'Name' columns, keeping the first occurrence
+    employees_all_unique = employees_all.drop_duplicates(
+        subset=["group", "Name"], keep="first"
+    )
+
+    # fill employees table from the dataframe
+    print(employees_all_unique.columns)
+    employees_all_unique.apply(
+        lambda row: crud.add_employee(
+            conn, (row["Name"], row["Email"], row["Phone"], row["status"])
+        ),
+        axis=1,
+    )
+
+    # Fill theater halls table
+    print("Filling theater halls table")
+    theater_halls = pd.read_csv(folder_name + "theater_halls.csv")
+    theater_halls.apply(
+        lambda row: crud.add_theater_hall(conn, (row["name"], row["capacity"])),
+        axis=1,
+    )
+
+    # Fill plays table
+    print("Filling plays table")
+    plays = pd.read_csv(folder_name + "plays.csv")
+    plays.apply(
+        lambda row: crud.add_play(
+            conn, (row["title"], row["description"], row["duration"])
+        ),
+        axis=1,
+    )
+
+    # finally:
     #    conn.commit()
     #    conn.close()
 
