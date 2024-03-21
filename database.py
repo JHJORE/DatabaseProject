@@ -98,6 +98,45 @@ def fill_db():
         lambda row: crud.add_actor(conn, (row["EID"])), axis=1
     )
 
+    # Fill managers table
+    print("Filling managers table")
+    employees_all_from_database = crud.get_all_employees(conn)
+    employees_all_from_database_with_ID = pd.DataFrame(
+        employees_all_from_database, columns=["EID", "Name", "Email", "Phone", "status"]
+    )
+    # Attempt to add Yury Butusov as a manager
+    try:
+        manager_kongsemnene = employees_all_from_database_with_ID[
+            employees_all_from_database_with_ID["Name"] == "Yury Butusov"
+        ]
+        crud.add_manager(conn, int(manager_kongsemnene["EID"].iloc[0]))
+    except IndexError:
+        print("Manager Yury Butusov not found.")
+
+    # Attempt to add Jonas Corell Petersen as a manager
+    try:
+        manager_storst_av_alt = employees_all_from_database_with_ID[
+            employees_all_from_database_with_ID["Name"] == "Jonas Corell Petersen"
+        ]
+        crud.add_manager(conn, int(manager_storst_av_alt["EID"].iloc[0]))
+    except IndexError:
+        print("Manager Jonas Corell Petersen not found.")
+
+    # Fill TheaterPlay table
+    print("Filling TheaterPlay table")
+    theater_plays = pd.read_csv(folder_name + "plays.csv")
+    theater_plays_with_THID = pd.merge(
+        theater_plays,
+        theater_halls.rename(columns={"Name": "theaterHallName"}),
+        on="theaterHallName",
+    )
+    theater_plays_with_THID.apply(
+        lambda row: crud.add_theater_play(
+            conn, (row["season"], row["Name"], row["THID"])
+        ),
+        axis=1,
+    )
+
     """
     # Fill plays table
     print("Filling plays table")
