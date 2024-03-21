@@ -421,6 +421,13 @@ def get_theater_hall_by_thid(conn, thid):
     return cur.fetchone()
 
 
+def get_all_theater_halls(conn):
+    sql = """ SELECT * FROM TheaterHalls """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
 def get_area_by_name(conn, thid, name):
     sql = """ SELECT * FROM Area WHERE THID=? AND Name=? """
     cur = conn.cursor()
