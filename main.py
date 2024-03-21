@@ -11,7 +11,7 @@ if __name__ == "__main__":
     cursor = conn.cursor()
     
     datab.fill_db()
-    print(c.get_act_by_numid(conn,1))
+    
 
     
    

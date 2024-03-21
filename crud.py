@@ -123,11 +123,11 @@ def add_backstage_employee(conn, eid):
 
 
 def add_role(conn, role):
-    sql = """ INSERT INTO Role(Name) VALUES(?) """
+    sql = """INSERT INTO Role(Name) VALUES(?)"""
     cur = conn.cursor()
-    cur.execute(sql, role)
+    
+    cur.execute(sql, (role,))
     conn.commit()
-
 
 def add_role_in_act(conn, numid, roleid):
     sql = """ INSERT INTO RoleInAct(NumID, RoleID) VALUES(?,?) """
