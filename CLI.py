@@ -45,7 +45,19 @@ def main_menu():
             pass
         elif choice == "3":
             # Check Chair Availability
-            check_chair_availability(conn)
+            # check_chair_availability(conn)
+            # Read data from the text files
+            tickets_gs = process_seat_file(
+                "files needed/gamle-scene.txt",
+                "Storst av alt er kjærligheten",
+                "Gamle Scene",
+            )
+            tickets_hs = process_seat_file(
+                "files needed/hovedscenen.txt", "Kongsemnene", "Hovedscenen"
+            )
+            tickets = tickets_gs + tickets_hs
+            for ticket in tickets:
+                print(ticket)
         elif choice == "4":
             # Buy Tickets
             pass
@@ -53,8 +65,9 @@ def main_menu():
             # Find actors by play by date
             pass
         elif choice == "6":
-            # List What actors are playing in a given play
-            pass
+            actors_and_roles = get_actors_and_roles(conn)
+            for play, actor, role in actors_and_roles:
+                print(f"{actor} is playing {role} in {play}")
         elif choice == "7":
             # Most popular play
             # 8. Find co-actors for a given actor for a given actor
@@ -83,6 +96,135 @@ def manage_plays():
 def manage_employees():
 
     print("Employee Management")
+
+
+def read_bought_tickets():
+    # read from text file
+    folder_name = "files needed/"
+    data_gamle_scene = ""
+
+
+def process_seat_file(file_path, play_name, theater_hall_name):
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    date = lines[0].strip().split()[1]  # Assumes the first line is always the date
+    current_area = ""
+    tickets = []
+
+    for line in lines[1:]:
+        line = line.strip()
+        if line in [
+            "Galleri",
+            "Balkong",
+            "Parkett",
+        ]:  # Check if the line is an area name
+            current_area = line
+            row_no = 1  # Initialize row number for each area
+        elif line:  # Non-empty line means seat row
+            for seat_no, seat_status in enumerate(line, start=1):
+                if seat_status == "1":  # Seat is occupied, create a ticket
+                    tickets.append(
+                        {
+                            "theater_hall": theater_hall_name,
+                            "play": play_name,
+                            "date": date,
+                            "area": current_area,
+                            "row_no": row_no,
+                            "seat_no": seat_no,
+                        }
+                    )
+            row_no += 1  # Move to the next row after processing the current row
+
+    return tickets
+
+
+def get_actors_and_roles(conn):
+    """
+    Fetches the names of plays, actors, and their roles.
+
+    Parameters:
+    - conn: SQLite database connection object
+
+    Returns:
+    - A list of tuples containing (PlayName, ActorName, RoleName)
+    """
+    sql = """
+    SELECT TheaterPlay.Name AS PlayName, Employees.Name AS ActorName, Role.Name AS RoleName
+    FROM TheaterPlay
+    JOIN PartOf ON TheaterPlay.PlayID = PartOf.PlayID
+    JOIN Acts ON PartOf.NumID = Acts.NumID
+    JOIN RoleInAct ON Acts.NumID = RoleInAct.NumID
+    JOIN Role ON RoleInAct.RoleID = Role.RoleID
+    JOIN Actor ON RoleInAct.NumID = Actor.EID
+    JOIN Employees ON Actor.EID = Employees.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql)
+    results = cur.fetchall()
+    return results
+
+
+def buy_tickets(conn):
+    finished = False
+    while not finished:
+        play_picked = input(
+            "What play do you want to buy tickets for?\n1: Kongsemnene (Playing in Hovedscenen) \n2: Storst av alt er kjærligheten (Playing in Gamle scene)\n:"
+        )
+        if play_picked == "1":
+            play = "Kongsemnene"
+        elif play_picked == "2":
+            play = "Storst av alt er kjærligheten"
+        else:
+            print("Invalid choice. Please choose again.")
+            continue
+
+        # get dates for the play
+        date_times = crud.get_play_dates_times(conn, play)
+        date_times_df = pd.DataFrame(date_times, columns=["Date", "Time"])
+        selected_date, selected_time = prompt_user_for_datetime_from_df(date_times_df)
+
+        # find seats for the play
+        if play == "Kongsemnene":
+            theater_hall = "Hovedscenen"
+            chosen_area = "Sal"
+            rowNO = input("Enter row number: ")
+            seatNO = input("Enter seat number: ")
+        if play == "Storst av alt er kjærligheten":
+            theater_hall = "Gamle Scene"
+            chosen_area = prompt_user_for_area(conn, theater_hall)
+
+        print("Checking chair availability...")
+        time.sleep(2)
+        if check_if_chair_occupied(
+            conn,
+            selected_date,
+            selected_time,
+            play,
+            chosen_area,
+            theater_hall,
+            rowNO,
+            seatNO,
+        ):
+            print("The chair is occupied, try again")
+            continue
+        else:
+            print("The chair is available.\n")
+            print("Do you want to buy a ticket for the specified time and chair?")
+            choice = input("1: Yes\n2: No\n:")
+            if choice == "1":
+                # buy ticket logic
+                pass
+            elif choice == "2":
+                finished = True
+            else:
+                print("Invalid choice. Please choose again.")
+                continue
+        input("Do you want to buy another ticket?\n1: Yes\n2: No\n:")
+        if choice == "2":
+            finished = True
+        elif choice == "1":
+            continue
 
 
 def check_chair_availability(conn):
