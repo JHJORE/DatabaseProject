@@ -30,20 +30,23 @@ def initialize_db():
 def fill_db():
     conn = connect_db()
     #Using csv file to fill the database
-    make_theater_hall(conn)
-    print("Theater hall filled")
-    make_theater_play(conn)
-    print("Theater play filled")
-    make_customer_segments(conn)
-    print("Customer segments filled")
-    make_performace(conn)
-    print("Performance filled")
-    make_main_stage_seating(conn)
-    print("Main stage seating filled")
-    make_old_stage_seating(conn)
-    print("Old stage seating filled")
-    make_employees(conn)
-    print("Employees filled")
+    # make_theater_hall(conn)
+    # print("Theater hall filled")
+    # make_theater_play(conn)
+    # print("Theater play filled")
+    # make_customer_segments(conn)
+    # print("Customer segments filled")
+    # make_performace(conn)
+    # print("Performance filled")
+    # make_main_stage_seating(conn)
+    # print("Main stage seating filled")
+    # make_old_stage_seating(conn)
+    # print("Old stage seating filled")
+    # make_employees(conn)
+    # print("Employees filled")
+    # make_act(conn)
+    # print("Act filled")
+    make_act_other
 
 
 
@@ -213,4 +216,69 @@ def make_employees(conn):
                         backstage = (eid, playid, task)
                         c.add_assigned_backstage(conn, backstage)
 
-                
+
+def make_acts_saaek(conn):
+    with open("jjcvs_data/SAAEK_act.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            playname = row[0]
+            rolename = row[1]
+            actnum = row[2]
+            actname = row[3]
+
+
+            playid = c.get_theater_play_by_name(conn, playname)[0]
+            c.add_part_of(conn, )
+
+def make_act(conn):
+    act_names = [
+        "Sverdet",
+        "Bjørnejakt",
+        "Brylluppet på Bergenhus",
+        "Morgengave",
+        "Manns minne",
+        "Hoved",
+    ]
+
+    # Iterate over the act names with their index
+    for i, act_name in enumerate(act_names, start=1):
+        c.add_act(conn, act_name)
+        if act_name == "Hoved":
+           
+            # playid = c.get_theater_play_by_name(conn, "Størst av alt er kjærligheten")[0]
+            c.add_part_of(conn,i, 2)
+        else:
+            playid = c.get_theater_play_by_name(conn, "Kongsemnene")[0]
+            c.add_part_of(conn, i, 1)
+
+
+def make_act_kongsnemnd(conn):
+     with open("jjcvs_data/kongsnemnd_act.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            playname = row[0]
+            rolename = row[1]
+            actnum = row[2]
+            actname = row[3]
+     
+
+def make_act_other(conn):
+    seen_roles = set()
+    with open("jjcvs_data/SAAEK_act.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            playname = row[0]
+            rolename = row[1]
+            actnum = row[2]
+            actname = row[3]
+            if rolename not in seen_roles:
+                # If not, add it to the database and the set of seen roles
+                c.add_role(conn, rolename)
+                seen_roles.add(rolename)
+                numid = c.get_act_by_name(conn, actname)[0]
+                roleid = c.get_role_by_name(conn, rolename)[0]
+                c.add_role_in_act(conn, numid,roleid) 
+            

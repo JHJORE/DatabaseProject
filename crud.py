@@ -139,9 +139,8 @@ def add_role_in_act(conn, numid, roleid):
 def add_act(conn, act):
     sql = """ INSERT INTO Acts(Name) VALUES(?) """
     cur = conn.cursor()
-    cur.execute(sql, act)
+    cur.execute(sql, (act,))
     conn.commit()
-
 
 def add_part_of(conn, numid, playid):
     sql = """ INSERT INTO PartOf(NumID, PlayID) VALUES(?,?) """
@@ -358,6 +357,12 @@ def get_roles_by_eid(conn, eid):
     cur.execute(sql, (eid,))
     return cur.fetchall()
 
+def get_role_by_name(conn, name):
+    sql = """ SELECT * FROM Role WHERE Name=? """
+    cur = conn.cursor()
+    cur.execute(sql, (name,))
+    return cur.fetchone()
+
 
 def get_employees_by_roleid(conn, roleid):
     sql = """ SELECT * FROM AssignedRole WHERE RoleID=? """
@@ -454,6 +459,12 @@ def get_act_by_numid(conn, numid):
     sql = """ SELECT * FROM Acts WHERE NumID=? """
     cur = conn.cursor()
     cur.execute(sql, (numid,))
+    return cur.fetchone()
+
+def get_act_by_name(conn, name):
+    sql = """ SELECT * FROM Acts WHERE Name=? """
+    cur = conn.cursor()
+    cur.execute(sql, (name,))
     return cur.fetchone()
 
 
