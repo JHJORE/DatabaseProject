@@ -59,10 +59,30 @@ def fill_db():
     print("Filling theater halls table")
     theater_halls = pd.read_csv(folder_name + "theater_halls.csv")
     theater_halls.apply(
-        lambda row: crud.add_theater_hall(conn, (row["name"], row["capacity"])),
+        lambda row: crud.add_theater_hall(conn, (row["Name"], row["capacity"])),
         axis=1,
     )
 
+    # Fill Areas table
+    print("Filling areas table")
+    areas = pd.read_csv(folder_name + "seating_theater_halls.csv")
+    areas["AreaID"] = (
+        areas.groupby(["Name", "Area"]).ngroup() + 1
+    )  # Create a unique ID for each area
+
+    # get THID from theaterHalls table
+    theater_halls = crud.get_all_theater_halls(conn)
+    theater_halls = pd.DataFrame(theater_halls, columns=["THID", "Name", "capacity"])
+    areas = pd.merge(areas, theater_halls, on="Name")
+    areas = areas.drop_duplicates(
+        subset=["THID", "AreaID"], keep="first"
+    )  # Only keep unique combinations of THID and AreaID
+    areas.apply(
+        lambda row: crud.add_area(conn, (row["THID"], row["AreaID"], row["Area"])),
+        axis=1,
+    )
+
+    """
     # Fill plays table
     print("Filling plays table")
     plays = pd.read_csv(folder_name + "plays.csv")
@@ -72,6 +92,7 @@ def fill_db():
         ),
         axis=1,
     )
+    """
 
     # finally:
     #    conn.commit()
