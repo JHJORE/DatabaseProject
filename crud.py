@@ -461,6 +461,18 @@ def get_area_by_name(conn, thid, name):
     return cur.fetchone()
 
 
+def get_areas_in_hall(conn, hall_name):
+    sql = """ 
+    SELECT Area.Name
+    FROM Area
+    JOIN TheaterHalls ON TheaterHalls.THID = Area.THID
+    WHERE TheaterHalls.Name = ?
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (hall_name,))
+    return cur.fetchall()
+
+
 def get_areas_by_thid(conn, thid):
     sql = """ SELECT * FROM Area WHERE THID=? """
     cur = conn.cursor()
