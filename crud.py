@@ -305,6 +305,18 @@ def get_assignments_by_playid(conn, playid):
     return cur.fetchall()
 
 
+def get_play_dates_times(conn, play_name):
+    sql = """ 
+    SELECT Performance.Date, Performance.Time
+    FROM Performance
+    JOIN TheaterPlay ON TheaterPlay.PlayID = Performance.PlayID
+    WHERE TheaterPlay.Name = ?
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (play_name,))
+    return cur.fetchall()
+
+
 def get_employee_by_eid(conn, eid):
     sql = """ SELECT * FROM Employees WHERE EID=? """
     cur = conn.cursor()
