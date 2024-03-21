@@ -347,6 +347,13 @@ def get_all_managers(conn):
     return cur.fetchall()
 
 
+def get_all_theater_plays(conn):
+    sql = """ SELECT * FROM TheaterPlay """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
 def get_plays_by_manager(conn, eid):
     sql = """ SELECT * FROM ManagerOf WHERE EID=? """
     cur = conn.cursor()
