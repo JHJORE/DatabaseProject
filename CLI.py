@@ -15,9 +15,8 @@ def clear_screen():
         subprocess.run(["clear"], shell=True, check=True)
 
 
-def main_menu():
+def main_menu(conn):
     # connect to database
-    conn = database.connect_db()
     cursor = conn.cursor()
     logged_off = False
     while not logged_off:
@@ -39,6 +38,7 @@ def main_menu():
 
         if choice == "1":
             database.initialize_db()
+            database.fill_db()
 
         elif choice == "2":
             # Insert data
@@ -59,10 +59,12 @@ def main_menu():
             for ticket in tickets:
                 print(ticket)
         elif choice == "4":
-            # Buy Tickets
+            # Buy 9 Tickets
+
             pass
         elif choice == "5":
             # 4. Find performances and ticket sales by date
+
             # get dates for the play
             date_times_kong = crud.get_play_dates_times(conn, "Kongsemnene")
             date_times_kong_df = pd.DataFrame(date_times_kong, columns=["Date", "Time"])
@@ -80,7 +82,7 @@ def main_menu():
             while selected_date is None:
                 selected_date = prompt_user_for_date_from_df(date_times)
 
-            results = get_performances_and_ticket_sales_by_date(conn, date)
+            results = get_performances_and_ticket_sales_by_date(conn, selected_date)
             if results:
                 for play_name, date, tickets_sold in results:
                     print(
@@ -95,8 +97,9 @@ def main_menu():
                 print(f"{actor} is playing {role} in {play}")
         elif choice == "7":
             # 6. Most popular play
-
+            print("fetching most popular play...")
             best_selling_performances = get_best_selling_performances(conn)
+            print("Most popular play(s):", best_selling_performances)
 
             # Print the results
             for play_name, date, tickets_sold in best_selling_performances:
@@ -104,8 +107,13 @@ def main_menu():
 
         elif choice == "8":
             # 8. Find co-actors for a given actor for a given actor
-            actor_name = "Your Actor's Name Here"  # Replace with the name of the actor you're interested in
-            coactors = find_coactors_by_actor_name(conn, actor_name)
+            selected_actor = None
+
+            while selected_actor is None:
+                selected_actor, selected_actor_eid = prompt_user_for_actor(conn)
+            print(f"Co-actors for {selected_actor}:")
+            coactors = find_coactors_by_actor_eid(conn, selected_actor_eid)
+            print(coactors)
 
             for actor1, actor2, play_name in coactors:
                 print(f"{actor1} and {actor2} played together in {play_name}")
@@ -526,3 +534,70 @@ def check_if_chair_occupied(conn, date, time, play, area, hall_name, row_no, sea
     cur.execute(sql, (play, date, time, hall_name, area, row_no, seat_no))
     result = cur.fetchone()
     return result[0] == 1  # Returns True if occupied, False otherwise
+
+
+def prompt_user_for_actor(conn):
+    # Get unique actors
+    actors = crud.get_all_actors(conn)
+    actors_df = pd.DataFrame(actors, columns=["EID"])
+
+    employees = crud.get_all_employees(conn)
+    employees_df = pd.DataFrame(
+        employees, columns=["EID", "Name", "Email", "Status", "Task"]
+    )
+
+    actors_df = actors_df.merge(employees_df, on="EID")
+
+    # Display actors with an index
+    print("Please choose an actor by entering the corresponding number:")
+    for i, actor in actors_df.iterrows():
+        print(f"{i + 1}: {actor['Name']}")
+
+    # Prompt user for actor choice
+    actor_choice = int(input("Enter your choice for actor: ")) - 1
+
+    # Check if the choice is valid
+    if 0 <= actor_choice < len(actors_df):
+        chosen_actor = actors_df.loc[actor_choice, "Name"]
+        selected_actor_eid = actors_df.loc[actor_choice, "EID"]
+    else:
+        print("Invalid actor choice. Please try again.")
+        return None
+
+    return chosen_actor, selected_actor_eid
+
+
+def find_coactors_by_actor_eid(conn, actor_eid):
+    """
+    Finds co-actors for the given actor EID in the same act of plays.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - actor_eid: The EID of the actor
+
+    Returns:
+    - A list of tuples containing (Actor1, Actor2, PlayName)
+    """
+    sql = """
+    SELECT DISTINCT
+        e1.Name AS Actor1,
+        e2.Name AS Actor2,
+        tp.Name AS PlayName
+    FROM
+        Employees e1
+    JOIN Actor a1 ON e1.EID = a1.EID
+    JOIN RoleInAct ria1 ON a1.EID = ria1.NumID
+    JOIN Acts ac1 ON ria1.NumID = ac1.NumID
+    JOIN PartOf po1 ON ac1.NumID = po1.NumID
+    JOIN TheaterPlay tp ON po1.PlayID = tp.PlayID
+    JOIN PartOf po2 ON tp.PlayID = po2.PlayID
+    JOIN Acts ac2 ON po2.NumID = ac2.NumID
+    JOIN RoleInAct ria2 ON ac2.NumID = ria2.NumID
+    JOIN Actor a2 ON ria2.NumID = a2.EID
+    JOIN Employees e2 ON a2.EID = e2.EID
+    WHERE e1.EID = ? AND e1.EID <> e2.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (actor_eid,))
+    results = cur.fetchall()
+    return results
