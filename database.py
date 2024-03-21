@@ -29,24 +29,27 @@ def initialize_db():
 
 def fill_db():
     conn = connect_db()
-    #Using csv file to fill the database
-    # make_theater_hall(conn)
-    # print("Theater hall filled")
-    # make_theater_play(conn)
-    # print("Theater play filled")
-    # make_customer_segments(conn)
-    # print("Customer segments filled")
-    # make_performace(conn)
-    # print("Performance filled")
-    # make_main_stage_seating(conn)
-    # print("Main stage seating filled")
-    # make_old_stage_seating(conn)
-    # print("Old stage seating filled")
-    # make_employees(conn)
-    # print("Employees filled")
-    # make_act(conn)
-    # print("Act filled")
-    make_act_other
+    # Using csv file to fill the database
+    make_theater_hall(conn)
+    print("Theater hall filled")
+    make_theater_play(conn)
+    print("Theater play filled")
+    make_customer_segments(conn)
+    print("Customer segments filled")
+    make_performace(conn)
+    print("Performance filled")
+    make_main_stage_seating(conn)
+    print("Main stage seating filled")
+    make_old_stage_seating(conn)
+    print("Old stage seating filled")
+    make_employees(conn)
+    print("Employees filled")
+    make_act(conn)
+    print("Act filled")
+    make_act_other(conn)
+    print("Act other filled")
+    make_act_kongsnemnd(conn)
+    print("Success")
 
 
 
@@ -254,6 +257,7 @@ def make_act(conn):
 
 
 def make_act_kongsnemnd(conn):
+     seen_roles = set()
      with open("jjcvs_data/kongsnemnd_act.csv", 'r') as file:
         csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
@@ -262,7 +266,23 @@ def make_act_kongsnemnd(conn):
             rolename = row[1]
             actnum = row[2]
             actname = row[3]
-     
+            if rolename not in seen_roles:
+                # If not, add it to the database and the set of seen roles
+                c.add_role(conn, rolename)
+
+                seen_roles.add(rolename)
+                
+                numid = c.get_act_by_name(conn, actname)
+                if numid and numid[0] is not None:  # This checks if numid is not None or empty, and its first element is not None
+                    roleid = c.get_role_by_name(conn, rolename)[0]
+                
+              
+                    c.add_role_in_act(conn, numid[0], roleid)
+                else:
+                
+                    pass 
+
+    
 
 def make_act_other(conn):
     seen_roles = set()
