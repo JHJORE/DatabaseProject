@@ -76,8 +76,19 @@ def main_menu():
 
             # Get unique dates
             dates = date_times["Date"].unique()
+            selected_date = None
+            while selected_date is None:
+                selected_date = prompt_user_for_date_from_df(date_times)
 
-            pass
+            results = get_performances_and_ticket_sales_by_date(conn, date)
+            if results:
+                for play_name, date, tickets_sold in results:
+                    print(
+                        f"Play: {play_name}, Date: {date}, Tickets Sold: {tickets_sold}"
+                    )
+            else:
+                print("No performances found for this date.")
+
         elif choice == "6":
             actors_and_roles = get_actors_and_roles(conn)
             for play, actor, role in actors_and_roles:
@@ -166,12 +177,7 @@ def get_performances_and_ticket_sales_by_date(conn, date):
     cur = conn.cursor()
     cur.execute(sql, (date,))
     results = cur.fetchall()
-
-    if results:
-        for play_name, date, tickets_sold in results:
-            print(f"Play: {play_name}, Date: {date}, Tickets Sold: {tickets_sold}")
-    else:
-        print("No performances found for this date.")
+    return results
 
 
 def manage_theater_halls():
