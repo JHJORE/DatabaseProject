@@ -333,6 +333,13 @@ def get_all_actors(conn):
     return cur.fetchall()
 
 
+def get_all_employees(conn):
+    sql = """ SELECT * FROM Employees """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
 def get_all_managers(conn):
     sql = """ SELECT * FROM Manager """
     cur = conn.cursor()
@@ -715,27 +722,22 @@ def delete_chair(conn, thid, name, chairno, rowno):
 
 def print_all_tables(conn):
     # List of table names to query. Adjust as needed.
-    tables = [
-        "CustomerProfile",
-        "Employees",
-        "plays",
-        "actors",
-        "tickets",
-        "theater_halls",
-        "plays_actors",
-        "employees_theater_halls",
-        "employees_roles",
-        "roles",
-        "users",
-    ]
+    # Retrieve a list of all tables in the database
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+
+    # Iterate over the list of tables and delete all records from each
     c = conn.cursor()
 
     for table in tables:
-        print(f"\nContents of {table}:")
+        print(f"\nContents of {table[0]}:")
         try:
-            c.execute(f"SELECT * FROM {table}")
+            c.execute(f"SELECT * FROM {table[0]}")
             rows = c.fetchall()
+            # Print table columns
+            print([description[0] for description in c.description])
             for row in rows:
                 print(row)
         except sqlite3.Error as e:
-            print(f"Error fetching data from {table}: {e}")
+            print(f"Error fetching data from {table[0]}: {e}")
