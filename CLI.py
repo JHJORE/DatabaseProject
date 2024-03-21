@@ -26,7 +26,7 @@ def main_menu(conn):
             2. Insert data
             3. Check Chair Availability
             4. Buy Tickets
-            5. Find Actors by Play by date
+            5. Find performances and ticket sales by date
             6. What actors are playing in a given play
             7. Most popular play
             8. Find co-actors for a given actor
@@ -42,11 +42,6 @@ def main_menu(conn):
 
         elif choice == "2":
             # Insert data
-            pass
-        elif choice == "3":
-            # Check Chair Availability
-            # check_chair_availability(conn)
-            # Read data from the text files
             tickets_gs = process_seat_file(
                 "files needed/gamle-scene.txt",
                 "Storst av alt er kjærligheten",
@@ -58,9 +53,15 @@ def main_menu(conn):
             tickets = tickets_gs + tickets_hs
             for ticket in tickets:
                 print(ticket)
+            pass
+        elif choice == "3":
+            # Check Chair Availability
+            # check_chair_availability(conn)
+            # Read data from the text files
+            pass
+
         elif choice == "4":
             # Buy 9 Tickets
-
             pass
         elif choice == "5":
             # 4. Find performances and ticket sales by date
@@ -580,12 +581,11 @@ def find_coactors_by_actor_eid(conn, actor_eid):
     """
     sql = """
     SELECT DISTINCT
-        e1.Name AS Actor1,
-        e2.Name AS Actor2,
+        e.Name AS ActorName,
+        e2.Name AS CoActorName,
         tp.Name AS PlayName
     FROM
-        Employees e1
-    JOIN Actor a1 ON e1.EID = a1.EID
+        Actor a1
     JOIN RoleInAct ria1 ON a1.EID = ria1.NumID
     JOIN Acts ac1 ON ria1.NumID = ac1.NumID
     JOIN PartOf po1 ON ac1.NumID = po1.NumID
@@ -594,8 +594,9 @@ def find_coactors_by_actor_eid(conn, actor_eid):
     JOIN Acts ac2 ON po2.NumID = ac2.NumID
     JOIN RoleInAct ria2 ON ac2.NumID = ria2.NumID
     JOIN Actor a2 ON ria2.NumID = a2.EID
+    JOIN Employees e ON a1.EID = e.EID
     JOIN Employees e2 ON a2.EID = e2.EID
-    WHERE e1.EID = ? AND e1.EID <> e2.EID;
+    WHERE a1.EID = ? AND a1.EID <> a2.EID;
     """
     cur = conn.cursor()
     cur.execute(sql, (actor_eid,))
