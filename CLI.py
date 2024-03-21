@@ -62,25 +62,116 @@ def main_menu():
             # Buy Tickets
             pass
         elif choice == "5":
-            # Find actors by play by date
+            # 4. Find performances and ticket sales by date
+            # get dates for the play
+            date_times_kong = crud.get_play_dates_times(conn, "Kongsemnene")
+            date_times_kong_df = pd.DataFrame(date_times_kong, columns=["Date", "Time"])
+            date_times_storst = crud.get_play_dates_times(
+                conn, "Storst av alt er kjærligheten"
+            )
+            date_times_storst_df = pd.DataFrame(
+                date_times_storst, columns=["Date", "Time"]
+            )
+            date_times = pd.concat([date_times_kong_df, date_times_storst_df])
+
+            # Get unique dates
+            dates = date_times["Date"].unique()
+
             pass
         elif choice == "6":
             actors_and_roles = get_actors_and_roles(conn)
             for play, actor, role in actors_and_roles:
                 print(f"{actor} is playing {role} in {play}")
         elif choice == "7":
-            # Most popular play
-            # 8. Find co-actors for a given actor for a given actor
-            pass
+            # 6. Most popular play
+
+            best_selling_performances = get_best_selling_performances(conn)
+
+            # Print the results
+            for play_name, date, tickets_sold in best_selling_performances:
+                print(f"Play: {play_name}, Date: {date}, Tickets Sold: {tickets_sold}")
+
         elif choice == "8":
-            # Most popular play
             # 8. Find co-actors for a given actor for a given actor
-            pass
+            actor_name = "Your Actor's Name Here"  # Replace with the name of the actor you're interested in
+            coactors = find_coactors_by_actor_name(conn, actor_name)
+
+            for actor1, actor2, play_name in coactors:
+                print(f"{actor1} and {actor2} played together in {play_name}")
         elif choice == "9":
             print("Exiting...")
             logged_off = True
         else:
             print("Invalid choice. Please choose again.")
+
+
+def get_best_selling_performances(conn):
+    """
+    Fetches performances sorted by the number of seats sold in descending order.
+
+    Parameters:
+    - conn: SQLite database connection object
+
+    Returns:
+    - A list of tuples containing (PlayName, Date, TicketsSold)
+    """
+    sql = """
+    SELECT 
+        TheaterPlay.Name AS PlayName,
+        Performance.Date,
+        COUNT(Ticket.TicketID) AS TicketsSold
+    FROM 
+        Ticket
+    JOIN 
+        Performance ON Ticket.PerformanceID = Performance.PerformanceID
+    JOIN 
+        TheaterPlay ON Performance.PlayID = TheaterPlay.PlayID
+    GROUP BY 
+        Performance.PerformanceID
+    ORDER BY 
+        TicketsSold DESC, Performance.Date;
+    """
+    cur = conn.cursor()
+    cur.execute(sql)
+    results = cur.fetchall()
+    return results
+
+
+def get_performances_and_ticket_sales_by_date(conn, date):
+    """
+    Prints out performances on a given date and the number of tickets sold for each.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - date: The date for which to fetch performances and ticket sales (format: YYYY-MM-DD)
+    """
+    sql = """
+    SELECT 
+        TheaterPlay.Name AS PlayName,
+        Performance.Date,
+        IFNULL(COUNT(Ticket.TicketID), 0) AS TicketsSold
+    FROM 
+        Performance
+    LEFT JOIN 
+        Ticket ON Performance.PerformanceID = Ticket.PerformanceID
+    JOIN 
+        TheaterPlay ON Performance.PlayID = TheaterPlay.PlayID
+    WHERE 
+        Performance.Date = ?
+    GROUP BY 
+        Performance.PerformanceID
+    ORDER BY 
+        PlayName;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (date,))
+    results = cur.fetchall()
+
+    if results:
+        for play_name, date, tickets_sold in results:
+            print(f"Play: {play_name}, Date: {date}, Tickets Sold: {tickets_sold}")
+    else:
+        print("No performances found for this date.")
 
 
 def manage_theater_halls():
@@ -98,10 +189,40 @@ def manage_employees():
     print("Employee Management")
 
 
-def read_bought_tickets():
-    # read from text file
-    folder_name = "files needed/"
-    data_gamle_scene = ""
+def find_coactors_by_actor_name(conn, actor_name):
+    """
+    Finds co-actors for the given actor name in the same act of plays.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - actor_name: The name of the actor
+
+    Returns:
+    - A list of tuples containing (Actor1, Actor2, PlayName)
+    """
+    sql = """
+    SELECT DISTINCT
+        e1.Name AS Actor1,
+        e2.Name AS Actor2,
+        tp.Name AS PlayName
+    FROM
+        Employees e1
+    JOIN Actor a1 ON e1.EID = a1.EID
+    JOIN RoleInAct ria1 ON a1.EID = ria1.NumID
+    JOIN Acts ac1 ON ria1.NumID = ac1.NumID
+    JOIN PartOf po1 ON ac1.NumID = po1.NumID
+    JOIN TheaterPlay tp ON po1.PlayID = tp.PlayID
+    JOIN PartOf po2 ON tp.PlayID = po2.PlayID
+    JOIN Acts ac2 ON po2.NumID = ac2.NumID
+    JOIN RoleInAct ria2 ON ac2.NumID = ria2.NumID
+    JOIN Actor a2 ON ria2.NumID = a2.EID
+    JOIN Employees e2 ON a2.EID = e2.EID
+    WHERE e1.Name = ? AND e1.EID <> e2.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (actor_name,))
+    results = cur.fetchall()
+    return results
 
 
 def process_seat_file(file_path, play_name, theater_hall_name):
@@ -351,6 +472,28 @@ def prompt_user_for_datetime_from_df(date_times_df):
         return None, None
 
     return chosen_date, chosen_time
+
+
+def prompt_user_for_date_from_df(date_times_df):
+    # Get unique dates
+    dates = date_times_df["Date"].unique()
+
+    # Display dates with an index
+    print("Please choose a date by entering the corresponding number:")
+    for i, date in enumerate(dates, 1):
+        print(f"{i}: {date}")
+
+    # Prompt user for date choice
+    date_choice = int(input("Enter your choice for date: ")) - 1
+
+    # Check if the choice is valid
+    if 0 <= date_choice < len(dates):
+        chosen_date = dates[date_choice]
+    else:
+        print("Invalid date choice. Please try again.")
+        return None
+
+    return chosen_date
 
 
 def check_if_chair_occupied(conn, date, time, play, area, hall_name, row_no, seat_no):
