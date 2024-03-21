@@ -1,8 +1,4 @@
-from database import connect_db
 import sqlite3
-
-conn = connect_db()
-cursor = conn.cursor()
 
 # Create -------------------------------------
 
@@ -162,7 +158,7 @@ def add_theater_hall(conn, theater_hall):
 
 
 def add_area(conn, area):
-    sql = """ INSERT INTO Area(THID, Name) VALUES(?,?) """
+    sql = """ INSERT INTO Area(THID, AreaID, Name) VALUES(?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, area)
     conn.commit()
