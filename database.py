@@ -82,6 +82,22 @@ def fill_db():
         axis=1,
     )
 
+    # Fill actors table
+    print("Filling actors table")
+    employees_all_unique_actors = crud.get_all_employees(conn)
+    employees_all_unique_with_ID = pd.DataFrame(
+        employees_all_unique_actors, columns=["EID", "Name", "Email", "Phone", "status"]
+    )
+    employees_all_unique_with_ID_and_group = pd.merge(
+        employees_all_unique, employees_all_unique_with_ID, on="Name"
+    )
+    employees_all_unique_actors = employees_all_unique_with_ID_and_group[
+        employees_all_unique_with_ID_and_group["group"] == "actor"
+    ]
+    employees_all_unique_actors.apply(
+        lambda row: crud.add_actor(conn, (row["EID"])), axis=1
+    )
+
     """
     # Fill plays table
     print("Filling plays table")
