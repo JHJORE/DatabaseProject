@@ -9,7 +9,9 @@ datab.initialize_db()
 if __name__ == "__main__":
     conn = sqlite3.connect('theater.db')
     cursor = conn.cursor()
+    
     datab.fill_db()
+    
 
     
    
