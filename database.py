@@ -130,12 +130,36 @@ def fill_db():
         theater_halls.rename(columns={"Name": "theaterHallName"}),
         on="theaterHallName",
     )
+
     theater_plays_with_THID.apply(
         lambda row: crud.add_theater_play(
             conn, (row["season"], row["Name"], row["THID"])
         ),
         axis=1,
     )
+
+    # Fill ManagerOf table
+    print("Filling ManagerOf table")
+    all_plays = crud.get_all_theater_plays(conn)
+    theater_plays_with_THID_and_manager_EID = pd.DataFrame(
+        all_plays, columns=["PlayID", "season", "Name", "THID", "EID"]
+    )
+    theater_plays_with_THID_and_manager_EID["EID"] = ""
+
+    # Loop through the DataFrame and set EID based on the play's name
+    for index, row in theater_plays_with_THID_and_manager_EID.iterrows():
+        if row["Name"] == "Størst av alt er kjærligheten":
+            theater_plays_with_THID_and_manager_EID.at[index, "EID"] = int(
+                manager_storst_av_alt["EID"].iloc[0]
+            )
+        if row["Name"] == "Kongsemnene":
+            theater_plays_with_THID_and_manager_EID.at[index, "EID"] = int(
+                manager_kongsemnene["EID"].iloc[0]
+            )
+    theater_plays_with_THID_and_manager_EID.apply(
+        lambda row: crud.add_manager_of(conn, (row["EID"], row["Name"])), axis=1
+    )
+    
 
     """
     # Fill plays table
