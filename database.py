@@ -1,6 +1,7 @@
 import sqlite3
 import pandas as pd
-import crud
+import crud as c
+import csv
 
 
 def connect_db():
@@ -28,172 +29,188 @@ def initialize_db():
 
 def fill_db():
     conn = connect_db()
-    cursor = conn.cursor()
-    # Using csv file to fill the database
-    folder_name = "csv_data/"
+    #Using csv file to fill the database
+    make_theater_hall(conn)
+    print("Theater hall filled")
+    make_theater_play(conn)
+    print("Theater play filled")
+    make_customer_segments(conn)
+    print("Customer segments filled")
+    make_performace(conn)
+    print("Performance filled")
+    make_main_stage_seating(conn)
+    print("Main stage seating filled")
+    make_old_stage_seating(conn)
+    print("Old stage seating filled")
+    make_employees(conn)
+    print("Employees filled")
 
-    # Fill employees table
-    print("Filling employees table")
-    employees_kongsemne = pd.read_csv(folder_name + "employees_kongsemnene_filled.csv")
-    employees_stortst_av_alt = pd.read_csv(
-        folder_name + "storst_av_alt_er_kjaerligheten_employees.csv"
-    )
-    # Concatenate the two dataframes
-    employees_all = pd.concat([employees_kongsemne, employees_stortst_av_alt])
 
-    # Drop duplicates based on 'group' and 'Name' columns, keeping the first occurrence
-    employees_all_unique = employees_all.drop_duplicates(
-        subset=["group", "Name"], keep="first"
-    )
 
-    # fill employees table from the dataframe
-    print(employees_all_unique.columns)
-    employees_all_unique.apply(
-        lambda row: crud.add_employee(
-            conn, (row["Name"], row["Email"], row["Phone"], row["status"])
-        ),
-        axis=1,
-    )
+def make_theater_hall(conn):
+    with open("jjcvs_data/theater_halls.csv", 'r') as file:
+        csv_reader = csv.reader(file)  # Pass the file object here
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            if len(row) >= 2:  # Ensure the row has at least two elements
+                name = row[0]
+                capacity = int(row[1])  
+                theater_hall = (name, capacity)
+                c.add_theater_hall(conn, theater_hall)  
+            else:
+                print(f"Row skipped due to insufficient columns: {row}")
 
-    # Fill theater halls table
-    print("Filling theater halls table")
-    theater_halls = pd.read_csv(folder_name + "theater_halls.csv")
-    theater_halls.apply(
-        lambda row: crud.add_theater_hall(conn, (row["Name"], row["capacity"])),
-        axis=1,
-    )
+def make_theater_play(conn):
+     with open("jjcvs_data/theater_plays.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+        for row in csv_reader:
+            if len(row) >= 3:  # Ensure the row has at least three elements
+                season = row[0]
+                name = row[1]
+                hallname = row[2]
+                print(hallname)
+                thid = c.get_theater_hall_by_name(conn, hallname)[0]
+               # Correctly capture the return value without print()
+                theater_play = (season, name, thid)
+                c.add_theater_play(conn, theater_play)  # Now we can uncomment this to add the play
+            else:
+                print(f"Row skipped due to insufficient columns: {row}")
 
-    # Fill Areas table
-    print("Filling areas table")
-    areas = pd.read_csv(folder_name + "seating_theater_halls.csv")
-    areas["AreaID"] = (
-        areas.groupby(["Name", "Area"]).ngroup() + 1
-    )  # Create a unique ID for each area
+def make_customer_segments(conn):
+    unique_segments = set()
 
-    # get THID from theaterHalls table
-    theater_halls = crud.get_all_theater_halls(conn)
-    theater_halls = pd.DataFrame(theater_halls, columns=["THID", "Name", "capacity"])
-    areas = pd.merge(areas, theater_halls, on="Name")
-    areas = areas.drop_duplicates(
-        subset=["THID", "AreaID"], keep="first"
-    )  # Only keep unique combinations of THID and AreaID
-    areas.apply(
-        lambda row: crud.add_area(conn, (row["THID"], row["AreaID"], row["Area"])),
-        axis=1,
-    )
+    with open("jjcvs_data/ticket_prices.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+        
+        for row in csv_reader:
+            play = row[0]
+            segment = row[1]
+            price = row[2]
 
-    # Fill actors table
-    print("Filling actors table")
-    employees_all_unique_actors = crud.get_all_employees(conn)
-    employees_all_unique_with_ID = pd.DataFrame(
-        employees_all_unique_actors, columns=["EID", "Name", "Email", "Phone", "status"]
-    )
-    employees_all_unique_with_ID_and_group = pd.merge(
-        employees_all_unique, employees_all_unique_with_ID, on="Name"
-    )
-    employees_all_unique_actors = employees_all_unique_with_ID_and_group[
-        employees_all_unique_with_ID_and_group["group"] == "actor"
-    ]
-    employees_all_unique_actors.apply(
-        lambda row: crud.add_actor(conn, (row["EID"])), axis=1
-    )
+            # Check if the segment has already been processed
+            if segment not in unique_segments:
+                unique_segments.add(segment)
+                c.add_customer_group(conn, segment)
 
-    # Fill managers table
-    print("Filling managers table")
-    employees_all_from_database = crud.get_all_employees(conn)
-    employees_all_from_database_with_ID = pd.DataFrame(
-        employees_all_from_database, columns=["EID", "Name", "Email", "Phone", "status"]
-    )
-    # Attempt to add Yury Butusov as a manager
-    try:
-        manager_kongsemnene = employees_all_from_database_with_ID[
-            employees_all_from_database_with_ID["Name"] == "Yury Butusov"
-        ]
-        crud.add_manager(conn, int(manager_kongsemnene["EID"].iloc[0]))
-    except IndexError:
-        print("Manager Yury Butusov not found.")
+            playid = c.get_theater_play_by_name(conn, play)[0]
+            
+            # Assuming get_customer_group_by_segmentid is meant to retrieve segment id from the database
+            segmentid = c.get_customer_group_by_segment(conn, segment)[0]
 
-    # Attempt to add Jonas Corell Petersen as a manager
-    try:
-        manager_storst_av_alt = employees_all_from_database_with_ID[
-            employees_all_from_database_with_ID["Name"] == "Jonas Corell Petersen"
-        ]
-        crud.add_manager(conn, int(manager_storst_av_alt["EID"].iloc[0]))
-    except IndexError:
-        print("Manager Jonas Corell Petersen not found.")
-
-    # Fill TheaterPlay table
-    print("Filling TheaterPlay table")
-    theater_plays = pd.read_csv(folder_name + "plays.csv")
-    theater_plays_with_THID = pd.merge(
-        theater_plays,
-        theater_halls.rename(columns={"Name": "theaterHallName"}),
-        on="theaterHallName",
-    )
-
-    theater_plays_with_THID.apply(
-        lambda row: crud.add_theater_play(
-            conn, (row["season"], row["Name"], row["THID"])
-        ),
-        axis=1,
-    )
-
-    # Fill ManagerOf table
-    print("Filling ManagerOf table")
-    all_plays = crud.get_all_theater_plays(conn)
-    theater_plays_with_THID_and_manager_EID = pd.DataFrame(
-        all_plays, columns=["PlayID", "season", "Name", "THID", "EID"]
-    )
-    theater_plays_with_THID_and_manager_EID["EID"] = ""
-
-    # Loop through the DataFrame and set EID based on the play's name
-    for index, row in theater_plays_with_THID_and_manager_EID.iterrows():
-        if row["Name"] == "Størst av alt er kjærligheten":
-            theater_plays_with_THID_and_manager_EID.at[index, "EID"] = int(
-                manager_storst_av_alt["EID"].iloc[0]
-            )
-        if row["Name"] == "Kongsemnene":
-            theater_plays_with_THID_and_manager_EID.at[index, "EID"] = int(
-                manager_kongsemnene["EID"].iloc[0]
-            )
-    theater_plays_with_THID_and_manager_EID.apply(
-        lambda row: crud.add_manager_of(conn, (row["EID"], row["Name"])), axis=1
-    )
+            group = (playid, segmentid, price)
     
+            c.add_has_group(conn, group)
 
-    """
-    # Fill plays table
-    print("Filling plays table")
-    plays = pd.read_csv(folder_name + "plays.csv")
-    plays.apply(
-        lambda row: crud.add_play(
-            conn, (row["title"], row["description"], row["duration"])
-        ),
-        axis=1,
-    )
-    """
+def make_performace(conn):
+    with open("jjcvs_data/play_schedule.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+        for row in csv_reader:
+            play = row[0]
+            date = row[1]
+            time = row[2]
+            playid = c.get_theater_play_by_name(conn, play)[0]
+            performance = (date, time, playid)
+            c.add_performance(conn, performance)
 
-    # finally:
-    #    conn.commit()
-    #    conn.close()
+def make_main_stage_seating(conn,):
+    unique_area = set()
+    with open("jjcvs_data/main_stage_seating.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            place = row[0]
+            row_number = row[1]  
+            seat_number = row[2]
+            
+            # Use a combined key of place and thid to ensure uniqueness across executions
+            thid = c.get_theater_hall_by_name(conn, "Main Stage")[0]
+            unique_key = (place, thid)
+            
+            if unique_key not in unique_area:
+                unique_area.add(unique_key)
+                
+                # Check if the area already exists in the database to avoid unique constraint errors. Had to do this becasue for some reason the set was not enough and we kept on getting errors
+                cur = conn.cursor()
+                cur.execute("SELECT 1 FROM Area WHERE Name=? AND THID=?", (place, thid))
+                exists = cur.fetchone()
+                
+                if not exists:
+                    area = (thid, place)
+                    c.add_area(conn, area)
 
+            chair = (thid, place, seat_number, row_number)
+            c.add_chair(conn, chair)
+            
+def make_old_stage_seating(conn,):
+    unique_area = set()
+    with open("jjcvs_data/old_stage_seating.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+        for row in csv_reader:
+            place = row[0]
+            row_number = row[1]  
+            seat_number = row[2]
+            
+            # Use a combined key of place and thid to ensure uniqueness across executions
+            thid = c.get_theater_hall_by_name(conn, "Old Stage")[0]
+            unique_key = (place, thid)
+            
+            if unique_key not in unique_area:
+                unique_area.add(unique_key)
+                
+                # Check if the area already exists in the database to avoid unique constraint errors. Had to do this becasue for some reason the set was not enough and we kept on getting errors
+                cur = conn.cursor()
+                cur.execute("SELECT 1 FROM Area WHERE Name=? AND THID=?", (place, thid))
+                exists = cur.fetchone()
+                
+                if not exists:
+                    area = (thid, place)
+                    c.add_area(conn, area)
 
-def flush_db():
-    conn = connect_db()
-    cursor = conn.cursor()
-    try:
-        # Retrieve a list of all tables in the database
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
+            chair = (thid, place, seat_number, row_number)
+            c.add_chair(conn, chair)
 
-        # Iterate over the list of tables and delete all records from each
-        for table_name in tables:
-            print(f"Flushing {table_name[0]}")
-            cursor.execute(f"DELETE FROM {table_name[0]}")
+def make_employees(conn):
+    with open("jjcvs_data/employees.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  # Skip the header row
+        for row in csv_reader:
+            play = row[0]
+            name = row[1]  
+            email = row[2]
+            status = row[3]
+            task = row[4]
+            employee = (name, email, status, task)
+            
+            # Add employee
+            c.add_employee(conn, employee)
+            eid = c.get_employee_by_name(conn, name)[0]
+            playid = c.get_theater_play_by_name(conn, play)[0] if play else None
+            
+            if task == "Skuespiller":
+                # Use get_actor_by_eid here as an example
+                if not c.get_actor_by_eid(conn, eid):
+                    c.add_actor(conn, eid)
+                    if playid:
+                        c.add_assigned_role(conn, (eid, playid))
 
-        print("Database flushed successfully")
-    except sqlite3.Error as e:
-        print(f"Error flushing database: {e}")
-    finally:
-        conn.commit()
-        conn.close()
+            elif task == "Direktør":
+                # Use get_manager_by_eid here as an example
+                if not c.get_manager_by_eid(conn, eid):
+                    c.add_manager(conn, eid)
+                    if playid:
+                        managerof = (eid, playid)
+                        c.add_manager_of(conn, managerof)
+
+            else:  # Assuming this is for backstage employees
+                # Use get_backstage_employee_by_eid here as an example
+                if not c.get_backstage_employee(conn, eid):
+                    c.add_backstage_employee(conn, eid)
+                    if playid:
+                        backstage = (eid, playid, task)
+                        c.add_assigned_backstage(conn, backstage)
+
+                
