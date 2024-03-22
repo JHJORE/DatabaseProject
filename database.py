@@ -232,15 +232,7 @@ def make_employees(conn):
             c.add_employee(conn, employee)
             eid = c.get_employee_by_name(conn, name)[0]
             playid = c.get_theater_play_by_name(conn, play)[0] if play else None
-
-            if task == "Skuespiller":
-                # Use get_actor_by_eid here as an example
-                if not c.get_actor_by_eid(conn, eid):
-                    c.add_actor(conn, eid)
-                    if playid:
-                        c.add_assigned_role(conn, (eid, playid))
-
-            elif task == "Direktør":
+            if task == "Direktør":
                 # Use get_manager_by_eid here as an example
                 if not c.get_manager_by_eid(conn, eid):
                     c.add_manager(conn, eid)
@@ -255,6 +247,31 @@ def make_employees(conn):
                     if playid:
                         backstage = (eid, playid, task)
                         c.add_assigned_backstage(conn, backstage)
+    # Read roles_and_actors.csv
+    roles_and_actors = pd.read_csv("cvs_data/roles_and_actors.csv")
+    roles_and_actors_df = pd.DataFrame(
+        roles_and_actors, columns=["Role", "Actor", "Play"]
+    )
+
+    # Iterate over the rows of the dataframe
+    for index, row in roles_and_actors_df.iterrows():
+        role = row["Role"]
+        actor = row["Actor"]
+        play = row["Play"]
+
+        c.add_role(conn, role)
+
+        # Get the role id
+        roleid = c.get_role_by_name(conn, role)[0]
+
+        # Get the employee id
+        eid = c.get_employee_by_name(conn, actor)[0]
+
+        # add the actor to the role
+        c.add_actor(conn, eid)
+
+        # Add the actor to the role
+        c.add_assigned_role(conn, (eid, roleid))
 
 
 def make_tickets(conn):
@@ -386,7 +403,9 @@ def make_act_kongsnemnd(conn):
             numid = c.get_act_by_name(conn, actname)
             if rolename not in seen_roles:
                 # If not, add it to the database and the set of seen roles
-                c.add_role(conn, rolename)
+                role_found = c.get_role_by_name(conn, rolename)
+                if not role_found:
+                    c.add_role(conn, rolename)
 
                 seen_roles.add(rolename)
             if (
