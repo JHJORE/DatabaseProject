@@ -43,7 +43,6 @@ def main_menu(conn):
                 database.initialize_db()
                 database.fill_db()
                 clear_screen()
-      
 
         elif choice == "2":
             # Insert data
@@ -190,6 +189,7 @@ def process_seat_file(file_path, play_name, theater_hall_name):
             row_no += 1  # Move to the next row after processing the current row
 
     return tickets
+
 
 def buy_tickets(conn):
     finished = False
@@ -458,27 +458,30 @@ def prompt_user_for_actor(conn):
     return chosen_actor, selected_actor_eid
 
 
-
 import sqlite3
 
-def check_db_initialized(db_path='theater.db'):
+
+def check_db_initialized(db_path="theater.db"):
     try:
         # Attempt to connect to the database
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
-        
+
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
 
         tables = cur.fetchall()
         conn.close()
-      
+
         if tables:
-            print("Database initialization aborted: The database already exists and contains tables.")
+            print(
+                "Database initialization aborted: The database already exists and contains tables."
+            )
             return False
         else:
             return True
     except sqlite3.Error as e:
         return f"An error occurred: {e}"
+
 
 # Example usage
 message = check_db_initialized()
