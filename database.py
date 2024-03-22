@@ -56,7 +56,7 @@ def fill_db():
 
 
 def make_theater_hall(conn):
-    with open("jjcvs_data/theater_halls.csv", "r") as file:
+    with open("cvs_data/theater_halls.csv", 'r') as file:
         csv_reader = csv.reader(file)  # Pass the file object here
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
@@ -70,9 +70,10 @@ def make_theater_hall(conn):
 
 
 def make_theater_play(conn):
-    with open("jjcvs_data/theater_plays.csv", "r") as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)
+
+     with open("cvs_data/theater_plays.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
         for row in csv_reader:
             if len(row) >= 3:  # Ensure the row has at least three elements
                 season = row[0]
@@ -92,10 +93,11 @@ def make_theater_play(conn):
 def make_customer_segments(conn):
     unique_segments = set()
 
-    with open("jjcvs_data/ticket_prices.csv", "r") as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)
 
+    with open("cvs_data/ticket_prices.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+        
         for row in csv_reader:
             play = row[0]
             segment = row[1]
@@ -117,9 +119,11 @@ def make_customer_segments(conn):
 
 
 def make_performace(conn):
-    with open("jjcvs_data/play_schedule.csv", "r") as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)
+
+    with open("cvs_data/play_schedule.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
+
         for row in csv_reader:
             play = row[0]
             date = row[1]
@@ -133,8 +137,9 @@ def make_main_stage_seating(
     conn,
 ):
     unique_area = set()
-    with open("jjcvs_data/main_stage_seating.csv", "r") as file:
-        csv_reader = csv.reader(file)
+
+    with open("cvs_data/main_stage_seating.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
             place = row[0]
@@ -165,9 +170,9 @@ def make_old_stage_seating(
     conn,
 ):
     unique_area = set()
-    with open("jjcvs_data/old_stage_seating.csv", "r") as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)
+    with open("cvs_data/old_stage_seating.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
+        next(csv_reader)  
         for row in csv_reader:
             place = row[0]
             row_number = row[1]
@@ -194,8 +199,8 @@ def make_old_stage_seating(
 
 
 def make_employees(conn):
-    with open("jjcvs_data/employees.csv", "r") as file:
-        csv_reader = csv.reader(file)
+    with open("cvs_data/employees.csv", 'r') as file:
+        csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
             play = row[0]
@@ -299,7 +304,7 @@ def process_seat_file(file_path, play_name, theater_hall_name):
 
     return tickets
 def make_acts_saaek(conn):
-    with open("jjcvs_data/SAAEK_act.csv", 'r') as file:
+    with open("cvs_data/SAAEK_act.csv", 'r') as file:
         csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
@@ -336,7 +341,7 @@ def make_act(conn):
 
 def make_act_kongsnemnd(conn):
      seen_roles = set()
-     with open("jjcvs_data/kongsnemnd_act.csv", 'r') as file:
+     with open("cvs_data/kongsnemnd_act.csv", 'r') as file:
         csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
@@ -364,7 +369,7 @@ def make_act_kongsnemnd(conn):
 
 def make_act_other(conn):
     seen_roles = set()
-    with open("jjcvs_data/SAAEK_act.csv", 'r') as file:
+    with open("cvs_data/SAAEK_act.csv", 'r') as file:
         csv_reader = csv.reader(file)  
         next(csv_reader)  # Skip the header row
         for row in csv_reader:

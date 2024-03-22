@@ -39,6 +39,7 @@ def main_menu(conn):
         if choice == "1":
             database.initialize_db()
             database.fill_db()
+            clear_screen()
 
         elif choice == "2":
             # Insert data
