@@ -42,7 +42,7 @@ def main_menu(conn):
             if check_db_initialized():
                 database.initialize_db()
                 database.fill_db()
-                # clear_screen()
+                clear_screen()
 
         elif choice == "2":
             pass
