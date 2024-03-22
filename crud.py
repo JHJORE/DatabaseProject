@@ -54,9 +54,7 @@ def add_has_group(conn, has_group):
     cur = conn.cursor()
     cur.execute(sql, has_group)
     conn.commit()
-    return (
-        cur.lastrowid
-    )
+    return cur.lastrowid
 
 
 def add_theater_play(conn, theater_play):
@@ -233,11 +231,13 @@ def get_customer_group_by_segmentid(conn, segmentid):
     cur.execute(sql, (segmentid,))
     return cur.fetchone()
 
+
 def get_customer_group_by_segment(conn, segment):
     sql = """ SELECT * FROM CustomerGroup WHERE Segment=? """
     cur = conn.cursor()
     cur.execute(sql, (segment,))
     return cur.fetchone()
+
 
 def get_all_customer_groups(conn):
     sql = """ SELECT * FROM CustomerGroup """
@@ -245,10 +245,17 @@ def get_all_customer_groups(conn):
     cur.execute(sql)
     return cur.fetchall()
 
+
 def get_performance_by_performanceid(conn, performanceid):
     sql = """ SELECT * FROM Performance WHERE PerformanceID=? """
     cur = conn.cursor()
     cur.execute(sql, (performanceid,))
+    return cur.fetchone()
+
+def get_performance_by_date(conn, date):
+    sql = """ SELECT * FROM Performance WHERE Date=? """
+    cur = conn.cursor()
+    cur.execute(sql, (date,))
     return cur.fetchone()
 
 
@@ -257,6 +264,7 @@ def get_performances_by_playid(conn, playid):
     cur = conn.cursor()
     cur.execute(sql, (playid,))
     return cur.fetchall()
+
 
 def get_all_performances(conn):
     sql = """ SELECT * FROM Performance """
@@ -279,12 +287,12 @@ def get_has_groups_for_segment(conn, segment_id):
     return cur.fetchall()
 
 
-
 def get_has_groups_for_play(conn, play_id):
     sql = """ SELECT * FROM HasGroup WHERE PlayID=? """
     cur = conn.cursor()
     cur.execute(sql, (play_id,))
     return cur.fetchall()
+
 
 def get_all_has_groups(conn):
     sql = """ SELECT * FROM HasGroup """
@@ -292,11 +300,13 @@ def get_all_has_groups(conn):
     cur.execute(sql)
     return cur.fetchall()
 
+
 def get_theater_play_by_playid(conn, playid):
     sql = """ SELECT * FROM TheaterPlay WHERE PlayID=? """
     cur = conn.cursor()
     cur.execute(sql, (playid,))
     return cur.fetchone()
+
 
 def get_theater_play_by_name(conn, name):
     sql = """ SELECT * FROM TheaterPlay WHERE Name=? """
@@ -304,11 +314,13 @@ def get_theater_play_by_name(conn, name):
     cur.execute(sql, (name,))
     return cur.fetchone()
 
+
 def get_theater_plays_by_thid(conn, thid):
     sql = """ SELECT * FROM TheaterPlay WHERE THID=? """
     cur = conn.cursor()
     cur.execute(sql, (thid,))
     return cur.fetchall()
+
 
 def get_all_theater_plays(conn):
     sql = """ SELECT * FROM TheaterPlay """
@@ -338,11 +350,24 @@ def get_assignments_by_playid(conn, playid):
     return cur.fetchall()
 
 
+def get_play_dates_times(conn, play_name):
+    sql = """ 
+    SELECT Performance.Date, Performance.Time
+    FROM Performance
+    JOIN TheaterPlay ON TheaterPlay.PlayID = Performance.PlayID
+    WHERE TheaterPlay.Name = ?
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (play_name,))
+    return cur.fetchall()
+
+
 def get_employee_by_eid(conn, eid):
     sql = """ SELECT * FROM Employees WHERE EID=? """
     cur = conn.cursor()
     cur.execute(sql, (eid,))
     return cur.fetchone()
+
 
 def get_employee_by_name(conn, name):
     sql = """ SELECT * FROM Employees WHERE Name=? """
@@ -391,6 +416,7 @@ def get_all_managers(conn):
     cur.execute(sql)
     return cur.fetchall()
 
+
 def get_manager_by_eid(conn, eid):
     sql = """ SELECT * FROM Manager WHERE EID=? """
     cur = conn.cursor()
@@ -417,7 +443,6 @@ def get_managers_of_play(conn, playid):
     cur = conn.cursor()
     cur.execute(sql, (playid,))
     return cur.fetchall()
-
 
 
 def get_backstage_employee(conn, eid):
@@ -492,6 +517,7 @@ def get_theater_hall_by_thid(conn, thid):
     cur.execute(sql, (thid,))
     return cur.fetchone()
 
+
 def get_theater_hall_by_name(conn, name):
     sql = """ SELECT * FROM TheaterHalls WHERE Name=? """
     cur = conn.cursor()
@@ -513,6 +539,18 @@ def get_area_by_name(conn, thid, name):
     return cur.fetchone()
 
 
+def get_areas_in_hall(conn, hall_name):
+    sql = """ 
+    SELECT Area.Name
+    FROM Area
+    JOIN TheaterHalls ON TheaterHalls.THID = Area.THID
+    WHERE TheaterHalls.Name = ?
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (hall_name,))
+    return cur.fetchall()
+
+
 def get_areas_by_thid(conn, thid):
     sql = """ SELECT * FROM Area WHERE THID=? """
     cur = conn.cursor()
@@ -525,6 +563,7 @@ def get_chair(conn, thid, name, chairno, rowno):
     cur = conn.cursor()
     cur.execute(sql, (thid, name, chairno, rowno))
     return cur.fetchone()
+
 
 def get_chair_by_thid(conn, thid):
     sql = """ SELECT * FROM Chair WHERE THID=? """
