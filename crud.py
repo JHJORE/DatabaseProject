@@ -532,6 +532,18 @@ def get_chair_by_thid(conn, thid):
     cur.execute(sql, (thid,))
     return cur.fetchall()
 
+
+def get_names_of_actors_in_various_playes(conn):
+    sql = """ SELECT DISTINCT Employees.Name FROM Employees
+              INNER JOIN Actor ON Employees.EID = Actor.EID
+              INNER JOIN RoleInAct ON Actor.EID = RoleInAct.RoleID
+              INNER JOIN Acts ON RoleInAct.NumID = Acts.NumID
+              INNER JOIN PartOf ON Acts.NumID = PartOf.NumID
+              INNER JOIN TheaterPlay ON PartOf.PlayID = TheaterPlay.PlayID """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
 # Update -------------------------------------
 
 
@@ -817,3 +829,5 @@ def print_all_tables(conn):
                 print(row)
         except sqlite3.Error as e:
             print(f"Error fetching data from {table[0]}: {e}")
+
+
