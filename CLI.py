@@ -102,11 +102,14 @@ def main_menu(conn):
             while selected_actor is None:
                 selected_actor, selected_actor_eid = prompt_user_for_actor(conn)
             print(f"Co-actors for {selected_actor}:")
-            coactors = c.get_coactors_by_actor_eid(conn, selected_actor_eid)
+            coactors = c.find_coactors_in_same_act(conn, selected_actor)
+            # coactors = c.get_coactors_by_actor_eid(conn, selected_actor_eid)
             print(coactors)
 
-            for actor1, actor2, play_name in coactors:
-                print(f"{actor1} and {actor2} played together in {play_name}")
+            for actor1, actor2, act, play_name in coactors:
+                print(
+                    f"{actor1} and {actor2} played together in {play_name} in act {act}"
+                )
         elif choice == "9":
             print("Exiting...")
             logged_off = True

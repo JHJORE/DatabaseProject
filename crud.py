@@ -736,6 +736,39 @@ def get_actors_roles_and_plays(conn):
     results = cur.fetchall()
     return results
 
+def find_coactors_in_same_act(conn, actor_name):
+    """
+    Finds co-actors who have played with the given actor in the same act and lists the names
+    of both actors and the play it happened in.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - actor_name: The name of the actor
+
+    Returns:
+    - A list of tuples containing (ActorName1, ActorName2, ActName, PlayName)
+    """
+    sql = """
+    SELECT DISTINCT e1.Name AS Actor1, e2.Name AS Actor2, ac.Name AS ActName, tp.Name AS PlayName
+    FROM Employees e1
+    INNER JOIN Actor a1 ON e1.EID = a1.EID
+    INNER JOIN AssignedRole ar1 ON e1.EID = ar1.EID
+    INNER JOIN RoleInAct ria1 ON ar1.RoleID = ria1.RoleID
+    INNER JOIN Acts ac ON ria1.NumID = ac.NumID
+    INNER JOIN PartOf po ON ac.NumID = po.NumID
+    INNER JOIN TheaterPlay tp ON po.PlayID = tp.PlayID
+    INNER JOIN RoleInAct ria2 ON ac.NumID = ria2.NumID
+    INNER JOIN AssignedRole ar2 ON ria2.RoleID = ar2.RoleID AND ar1.EID != ar2.EID
+    INNER JOIN Actor a2 ON ar2.EID = a2.EID
+    INNER JOIN Employees e2 ON a2.EID = e2.EID
+    WHERE e1.Name = ?
+    ORDER BY ac.Name, tp.Name
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (actor_name,))
+    results = cur.fetchall()
+    return results
+
 
 def get_coactors_by_actor_name(conn, actor_name):
     """
