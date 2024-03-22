@@ -710,7 +710,7 @@ def get_names_of_actors_in_various_playes(conn):
     return cur.fetchall()
 
 
-def get_actors_and_roles(conn):
+def get_actors_roles_and_plays(conn):
     """
     Fetches the names of plays, actors, and their roles.
 
@@ -718,14 +718,18 @@ def get_actors_and_roles(conn):
     - conn: SQLite database connection object
 
     Returns:
-    - A list of tuples containing ( ActorName, PlayName, RoleName)
+    - A list of tuples containing (ActorName, RoleName, PlayName)
     """
     sql = """
-    SELECT e.Name AS ActorName, r.Name AS RoleName
+    SELECT e.Name AS ActorName, r.Name AS RoleName, tp.Name AS PlayName
     FROM Employees e
     JOIN Actor a ON e.EID = a.EID
     JOIN AssignedRole ar ON a.EID = ar.EID
     JOIN Role r ON ar.RoleID = r.RoleID
+    JOIN RoleInAct ria ON r.RoleID = ria.RoleID
+    JOIN Acts ac ON ria.NumID = ac.NumID
+    JOIN PartOf po ON ac.NumID = po.NumID
+    JOIN TheaterPlay tp ON po.PlayID = tp.PlayID
     """
     cur = conn.cursor()
     cur.execute(sql)

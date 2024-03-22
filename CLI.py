@@ -81,9 +81,10 @@ def main_menu(conn):
 
         elif choice == "6":
             # 5. What actors are playing in a given play
-            actors_and_roles = c.get_actors_and_roles(conn)
-            for actor, role in actors_and_roles:
-                print(f"{actor} is playing {role} ")
+            actors_and_roles = c.get_actors_roles_and_plays(conn)
+            for actor, role, play in actors_and_roles:
+
+                print(f"{actor} is playing {role} in {play}")
         elif choice == "7":
             # 6. Most popular play
             print("fetching most popular play...")
