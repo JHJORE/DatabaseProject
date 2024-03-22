@@ -49,7 +49,7 @@ def main_menu(conn):
         elif choice == "3":
             pass
         elif choice == "4":
-            # Buy tickets
+            # 3. Buy tickets
             buy_ticket_amount(conn)
         elif choice == "5":
             # 4. Find performances and ticket sales by date
@@ -82,7 +82,7 @@ def main_menu(conn):
         elif choice == "6":
             # 5. What actors are playing in a given play
             actors_and_roles = c.get_actors_roles_and_plays(conn)
-            for actor, role, play in actors_and_roles:
+            for actor, role, play in set(actors_and_roles):
 
                 print(f"{actor} is playing {role} in {play}")
         elif choice == "7":
