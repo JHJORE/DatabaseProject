@@ -613,6 +613,13 @@ def get_areas_by_thid(conn, thid):
     return cur.fetchall()
 
 
+def get_area_by_thid_and_name(conn, thid, name):
+    sql = """ SELECT * FROM Area WHERE THID=? AND Name=? """
+    cur = conn.cursor()
+    cur.execute(sql, (thid, name))
+    return cur.fetchone()
+
+
 def get_chair(conn, thid, name, chairno, rowno):
     sql = """ SELECT * FROM Chair WHERE THID=? AND Name=? AND ChairNo=? AND RowNo=? """
     cur = conn.cursor()
