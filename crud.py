@@ -123,9 +123,10 @@ def add_backstage_employee(conn, eid):
 def add_role(conn, role):
     sql = """INSERT INTO Role(Name) VALUES(?)"""
     cur = conn.cursor()
-    
+
     cur.execute(sql, (role,))
     conn.commit()
+
 
 def add_role_in_act(conn, numid, roleid):
     sql = """ INSERT INTO RoleInAct(NumID, RoleID) VALUES(?,?) """
@@ -139,6 +140,7 @@ def add_act(conn, act):
     cur = conn.cursor()
     cur.execute(sql, (act,))
     conn.commit()
+
 
 def add_part_of(conn, numid, playid):
     sql = """ INSERT INTO PartOf(NumID, PlayID) VALUES(?,?) """
@@ -252,10 +254,27 @@ def get_performance_by_performanceid(conn, performanceid):
     cur.execute(sql, (performanceid,))
     return cur.fetchone()
 
+
 def get_performance_by_date(conn, date):
     sql = """ SELECT * FROM Performance WHERE Date=? """
     cur = conn.cursor()
     cur.execute(sql, (date,))
+    return cur.fetchone()
+
+
+def get_all_performance_by_date(conn, date):
+    sql = """ SELECT * FROM Performance WHERE Date=? """
+    cur = conn.cursor()
+    cur.execute(sql, (date,))
+    return cur.fetchall()
+
+
+def get_performance_by_date_and_playname(conn, date, playname):
+    sql = """ SELECT Performance.* FROM Performance
+              INNER JOIN TheaterPlay ON Performance.PlayID = TheaterPlay.PlayID
+              WHERE Performance.Date=? AND TheaterPlay.Name=? """
+    cur = conn.cursor()
+    cur.execute(sql, (date, playname))
     return cur.fetchone()
 
 
@@ -382,6 +401,7 @@ def get_roles_by_eid(conn, eid):
     cur.execute(sql, (eid,))
     return cur.fetchall()
 
+
 def get_role_by_name(conn, name):
     sql = """ SELECT * FROM Role WHERE Name=? """
     cur = conn.cursor()
@@ -486,6 +506,7 @@ def get_act_by_numid(conn, numid):
     cur.execute(sql, (numid,))
     return cur.fetchone()
 
+
 def get_act_by_name(conn, name):
     sql = """ SELECT * FROM Acts WHERE Name=? """
     cur = conn.cursor()
@@ -582,6 +603,7 @@ def get_names_of_actors_in_various_playes(conn):
     cur = conn.cursor()
     cur.execute(sql)
     return cur.fetchall()
+
 
 # Update -------------------------------------
 
@@ -868,5 +890,3 @@ def print_all_tables(conn):
                 print(row)
         except sqlite3.Error as e:
             print(f"Error fetching data from {table[0]}: {e}")
-
-
