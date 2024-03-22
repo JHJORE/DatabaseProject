@@ -102,8 +102,8 @@ def make_customer_segments(conn):
             price = row[2]
 
             # Check if the segment has already been processed
-            if segment not in unique_segments:
-                unique_segments.add(segment)
+            if (segment, play) not in unique_segments:
+                unique_segments.add((segment, play))
                 c.add_customer_group(conn, segment)
 
             playid = c.get_theater_play_by_name(conn, play)[0]
@@ -111,7 +111,7 @@ def make_customer_segments(conn):
             # Assuming get_customer_group_by_segmentid is meant to retrieve segment id from the database
             segmentid = c.get_customer_group_by_segment(conn, segment)[0]
 
-            group = (playid, segmentid, price)
+            group = (segmentid, playid, price)
 
             c.add_has_group(conn, group)
 
@@ -141,8 +141,8 @@ def make_main_stage_seating(
         next(csv_reader)  # Skip the header row
         for row in csv_reader:
             place = row[0]
-            row_number = row[1]
-            seat_number = row[2]
+            row_number = row[2]
+            seat_number = row[1]
 
             # Use a combined key of place and thid to ensure uniqueness across executions
             thid = c.get_theater_hall_by_name(conn, "Main Stage")[0]
@@ -159,9 +159,19 @@ def make_main_stage_seating(
                 if not exists:
                     area = (thid, place)
                     c.add_area(conn, area)
+                    # Add theaterHallArea
+                    areaid = c.get_area_by_thid_and_name(conn, thid, place)[0]
+                    c.add_area_theater_hall(conn, thid, place, areaid)
 
             chair = (thid, place, seat_number, row_number)
             c.add_chair(conn, chair)
+            # Add chair to ChairInArea
+            areaid = (
+                c.get_area_by_thid_and_name(conn, thid, place)[0]
+                if c.get_area_by_thid_and_name(conn, thid, place)[0]
+                else "69"
+            )
+            c.add_chair_in_area(conn, thid, place, seat_number, row_number, areaid)
 
 
 def make_old_stage_seating(
@@ -191,9 +201,19 @@ def make_old_stage_seating(
                 if not exists:
                     area = (thid, place)
                     c.add_area(conn, area)
+                    # Add theaterHallArea
+                    areaid = c.get_area_by_thid_and_name(conn, thid, place)[0]
+                    c.add_area_theater_hall(conn, thid, place, areaid)
 
             chair = (thid, place, seat_number, row_number)
             c.add_chair(conn, chair)
+            # Add chair to ChairInArea
+            areaid = (
+                c.get_area_by_thid_and_name(conn, thid, place)[0]
+                if c.get_area_by_thid_and_name(conn, thid, place)[0]
+                else "69"
+            )
+            c.add_chair_in_area(conn, thid, place, seat_number, row_number, areaid)
 
 
 def make_employees(conn):
@@ -364,17 +384,17 @@ def make_act_kongsnemnd(conn):
             actnum = row[2]
             actname = row[3]
             numid = c.get_act_by_name(conn, actname)
+            if rolename not in seen_roles:
+                # If not, add it to the database and the set of seen roles
+                c.add_role(conn, rolename)
+
+                seen_roles.add(rolename)
             if (
                 numid and numid[0] is not None
             ):  # This checks if numid is not None or empty, and its first element is not None
                 roleid = c.get_role_by_name(conn, rolename)[0]
 
                 c.add_role_in_act(conn, numid[0], roleid)
-            if rolename not in seen_roles:
-                # If not, add it to the database and the set of seen roles
-                c.add_role(conn, rolename)
-
-                seen_roles.add(rolename)
 
 
 def make_act_other(conn):
@@ -387,10 +407,10 @@ def make_act_other(conn):
             rolename = row[1]
             actnum = row[2]
             actname = row[3]
-            numid = c.get_act_by_name(conn, actname)[0]
-            roleid = c.get_role_by_name(conn, rolename)[0]
-            c.add_role_in_act(conn, numid, roleid)
             if rolename not in seen_roles:
                 # If not, add it to the database and the set of seen roles
                 c.add_role(conn, rolename)
                 seen_roles.add(rolename)
+            numid = c.get_act_by_name(conn, actname)[0]
+            roleid = c.get_role_by_name(conn, rolename)[0]
+            c.add_role_in_act(conn, numid, roleid)

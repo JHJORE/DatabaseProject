@@ -11,6 +11,49 @@ import CLI as interface
 import crud as c
 
 
+def check_row_availability_new(conn, amount, name, date, time):
+    if name == "Størst av alt er kjærligheten":
+        playid = 2
+    else:
+        playid = 1
+
+    thid = c.get_theater_play_by_playid(conn, playid)[3]
+
+    chairs = c.get_chair_by_thid(conn, thid)
+    play = c.get_theater_play_by_playid(conn, playid)[2]
+    hall_name = c.get_theater_hall_by_thid(conn, thid)[1]
+
+    # Initialize a dictionary to store available seat details per row and area
+    available_seats_details = {}
+
+    for chair in chairs:
+        row_no, area, seat_no = chair[2], chair[1], chair[3]
+        dic_key = (row_no, area)
+
+        # Check if the individual seat is available
+        if check_individual_seat_availability(
+            conn, date, time, play, area, hall_name, row_no, seat_no
+        ):
+            if dic_key in available_seats_details:
+                available_seats_details[dic_key].append(
+                    (date, time, play, area, hall_name, row_no, seat_no)
+                )
+            else:
+                available_seats_details[dic_key] = [
+                    (date, time, play, area, hall_name, row_no, seat_no)
+                ]
+
+    # Check if any row has the required number of available seats
+    for (row_no, area), seats in available_seats_details.items():
+        if len(seats) >= amount:
+            print(f"Row {row_no} in {area} has at least {amount} available seats.")
+            # Return only the amount of seats needed
+            return True, seats[:amount]
+
+    print("No row has the required number of available seats.")
+    return False, []
+
+
 def check_row_availability(conn, amount, name, date, time):
 
     if name == "Størst av alt er kjærligheten":
@@ -27,10 +70,7 @@ def check_row_availability(conn, amount, name, date, time):
     available_seats_per_row = {}
 
     for chair in chairs:
-        row_no = chair[2]
-        area = chair[1]
-        seat_no = chair[3]
-
+        row_no, area, seat_no = chair[2], chair[1], chair[3]
         dic_key = (row_no, area)
 
         # Assume check_if_chair_occupied returns True if occupied, False if available
@@ -46,10 +86,10 @@ def check_row_availability(conn, amount, name, date, time):
     for (row_no, area), available_seats in available_seats_per_row.items():
         if available_seats >= amount:
             print(f"Row {row_no} in {area} has at least {amount} available seats.")
-            return True
+            return True, []
 
     print("No row has the required number of available seats.")
-    return False
+    return False, []
 
 
 def check_individual_seat_availability(

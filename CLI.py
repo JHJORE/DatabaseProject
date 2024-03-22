@@ -24,7 +24,7 @@ def main_menu(conn):
         print(
             """
             1. Initialize Database and Insert Initial Data
-            2. Insert data
+            2. Does nothing
             3. Check Chair Availability
             4. Buy Tickets
             5. Find performances and ticket sales by date
@@ -44,28 +44,12 @@ def main_menu(conn):
                 # clear_screen()
 
         elif choice == "2":
-            # Insert data
-            tickets_gs = process_seat_file(
-                "files needed/gamle-scene.txt",
-                "Storst av alt er kjærligheten",
-                "Gamle Scene",
-            )
-            tickets_hs = process_seat_file(
-                "files needed/hovedscenen.txt", "Kongsemnene", "Hovedscenen"
-            )
-            tickets = tickets_gs + tickets_hs
-            for ticket in tickets:
-                print(ticket)
             pass
         elif choice == "3":
-            # Check Chair Availability
-            # check_chair_availability(conn)
-            # Read data from the text files
-
+            # Buy tickets
             buy_ticket_amount(conn)
 
         elif choice == "4":
-            # Buy 9 Tickets
             pass
         elif choice == "5":
             # 4. Find performances and ticket sales by date
@@ -143,14 +127,65 @@ def buy_ticket_amount(conn):
             print("Invalid choice. Please choose again.")
             break
         clear_screen()
-        # get dates for the play
+        # Get dates for the play
         date_times = c.get_play_dates_times(conn, play)
         date_times_df = pd.DataFrame(date_times, columns=["Date", "Time"])
         selected_date, selected_time = prompt_user_for_datetime_from_df(date_times_df)
         amount = prompt_user_for_amount()
-        checkseat.check_row_availability(
+        ticket_type = prompt_user_for_ticket_type()
+        segment_entity = c.get_HasGroup_by_segment_and_playid(
+            conn, ticket_type, play_picked
+        )
+        price = segment_entity[-1]
+
+        is_available, array_of_tickets = checkseat.check_row_availability_new(
             conn, amount, play, selected_date, selected_time
         )
+        performanceID = c.get_performance_by_date_and_playname(
+            conn, selected_date, play
+        )[0]
+        if is_available:
+            if (
+                amount >= 10
+            ):  # For 10 or more tickets, apply a 30 NOK discount per ticket
+                print(
+                    f"The total price for {amount} tickets is {(amount * (price-30))} NOK. Do you want to buy?"
+                )
+            else:
+                print(
+                    f"The total price for {amount} tickets is {(amount * price)} NOK. Do you want to buy?"
+                )
+            choice = input("1: Yes\n2: No\n:")
+            if choice == "1":
+                # If the user chooses to buy, create the tickets
+                for ticket in array_of_tickets:
+                    performanceID, segID, chairNo, rowNo, playName, THID = (
+                        c.get_performance_by_date_and_playname(conn, ticket[0], play)[
+                            0
+                        ],
+                        segment_entity[0],
+                        ticket[6],
+                        ticket[5],
+                        ticket[2],
+                        c.get_theater_hall_by_name(conn, ticket[4])[0],
+                    )
+                    # Assuming `add_ticket` expects a tuple of the necessary ticket details ( PerformanceID, SegmentID, OrderID, ChairNO, RowNO, Name, THID)
+                    ticket_made = (
+                        performanceID,
+                        segID,
+                        2,
+                        chairNo,
+                        rowNo,
+                        playName,
+                        THID,
+                    )  # Assuming orderID is 1 for simplicity
+                    c.add_ticket(conn, ticket_made)
+                print("Tickets purchased successfully.")
+            else:
+                print("Purchase cancelled.")
+        else:
+            print("Requested amount of tickets not available.")
+
         print("Do you want to check availability for another play or performance?")
         choice = input("1: Yes\n2: No\n:")
         if choice == "2":
@@ -160,6 +195,20 @@ def buy_ticket_amount(conn):
 def prompt_user_for_amount():
     date_choice = int(input("Please enter the amount of tickets you want in a row:"))
     return date_choice
+
+
+def prompt_user_for_ticket_type():
+    ticket_types = ["Ordinary", "Honour", "Student", "Children"]
+    print("Please choose a ticket type by entering the corresponding number:")
+    for index, type in enumerate(ticket_types, start=1):
+        print(f"{index}: {type}")
+    ticket_choice = int(input("Enter your choice for ticket type: ")) - 1
+
+    if ticket_choice >= 0 and ticket_choice < len(ticket_types):
+        return ticket_types[ticket_choice]
+    else:
+        print("Invalid choice.")
+        return None
 
 
 def process_seat_file(file_path, play_name, theater_hall_name):

@@ -354,6 +354,31 @@ def get_has_groups_for_play(conn, play_id):
     return cur.fetchall()
 
 
+def get_segmentid_from_segment_and_play(conn, segment, play_id):
+    # Join HasGroup and Segment tables to get the SegmentID
+    sql = """ SELECT HasGroup.SegmentID FROM HasGroup
+              JOIN CustomerGroup ON HasGroup.SegmentID = CustomerGroup.SegmentID
+              WHERE CustomerGroup.Segment=? AND HasGroup.PlayID=? """
+    cur = conn.cursor()
+    cur.execute(sql, (segment, play_id))
+    return cur.fetchone()
+
+def get_HasGroup_by_segment_and_playid(conn, segment, playid):
+    sql = """ SELECT * FROM CustomerGroup
+            INNER JOIN HasGroup ON CustomerGroup.SegmentID = HasGroup.SegmentID
+             WHERE CustomerGroup.Segment=? AND HasGroup.PlayID=?"""
+    cur = conn.cursor()
+    cur.execute(sql, (segment, playid))
+    return cur.fetchone()
+
+
+def get_has_groups_from_segment_and_play(conn, segment_id, play_id):
+    sql = """ SELECT * FROM HasGroup WHERE SegmentID=? AND PlayID=? """
+    cur = conn.cursor()
+    cur.execute(sql, (segment_id, play_id))
+    return cur.fetchone()
+
+
 def get_all_has_groups(conn):
     sql = """ SELECT * FROM HasGroup """
     cur = conn.cursor()
