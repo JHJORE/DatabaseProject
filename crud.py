@@ -571,6 +571,11 @@ def get_chair_by_thid(conn, thid):
     cur.execute(sql, (thid,))
     return cur.fetchall()
 
+def get_all_chairs(conn):
+    sql = """ SELECT * FROM Chair """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
 
 def get_names_of_actors_in_various_playes(conn):
     sql = """ SELECT DISTINCT Employees.Name FROM Employees

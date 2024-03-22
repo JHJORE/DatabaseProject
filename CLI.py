@@ -4,6 +4,8 @@ import subprocess
 import database
 import crud as c
 import pandas as pd
+import checkseat
+
 
 
 def clear_screen():
@@ -61,7 +63,8 @@ def main_menu(conn):
             # Check Chair Availability
             # check_chair_availability(conn)
             # Read data from the text files
-            pass
+            
+            buy_ticket_amount(conn)
 
         elif choice == "4":
             # Buy 9 Tickets
@@ -126,6 +129,33 @@ def main_menu(conn):
             logged_off = True
         else:
             print("Invalid choice. Please choose again.")
+
+def buy_ticket_amount(conn):
+    finished = False
+    while not finished:
+        play_picked = input(
+            "What play do you want to check?\n1: Kongsemnene (Playing in Hovedscenen) \n2: Storst av alt er kjærligheten (Playing in Gamle scene)\n:"
+        )
+        if play_picked == "1":
+            play = "Kongsemnene"
+        elif play_picked == "2":
+            play = "Storst av alt er kjærligheten"
+        else:
+            print("Invalid choice. Please choose again.")
+            break
+        clear_screen()
+        # get dates for the play
+        date_times = c.get_play_dates_times(conn, play)
+        date_times_df = pd.DataFrame(date_times, columns=["Date", "Time"])
+        selected_date, selected_time = prompt_user_for_datetime_from_df(date_times_df)
+        amount = prompt_user_for_amount()
+        checkseat.check_seat_availibity(conn, amount, play, selected_date, selected_time)
+
+
+
+def prompt_user_for_amount():
+    date_choice = int(input("Please enter the amount of tickets you want in a row:"))
+    return date_choice
 
 def process_seat_file(file_path, play_name, theater_hall_name):
     with open(file_path, "r") as file:
