@@ -131,7 +131,27 @@ def add_role(conn, role):
 def add_role_in_act(conn, numid, roleid):
     sql = """ INSERT INTO RoleInAct(NumID, RoleID) VALUES(?,?) """
     cur = conn.cursor()
-    cur.execute(sql, (numid, roleid))
+    try:
+        cur.execute(sql, (numid, roleid))
+    except:
+        print("Error adding role in act")
+        print(numid, roleid)
+        print(get_role_by_roleid(conn, roleid))
+        print(get_act_by_numid(conn, numid))
+    conn.commit()
+
+
+def add_area_theater_hall(conn, thid, name, areaid):
+    sql = """ INSERT INTO AreaTheaterHall(THID, Name, AreaID) VALUES(?,?,?) """
+    cur = conn.cursor()
+    cur.execute(sql, (thid, name, areaid))
+    conn.commit()
+
+
+def add_chair_in_area(conn, thid, name, chairno, rowno, areaid):
+    sql = """ INSERT INTO ChairInArea(THID, Name, AreaID, ChairNo, RowNo) VALUES(?,?,?,?,?) """
+    cur = conn.cursor()
+    cur.execute(sql, (thid, name, areaid, chairno, rowno))
     conn.commit()
 
 
@@ -183,6 +203,20 @@ def get_order_by_orderid(conn, orderid):
     cur = conn.cursor()
     cur.execute(sql, (orderid,))
     return cur.fetchone()
+
+
+def get_all_roles_in_act(conn):
+    sql = """ SELECT * FROM RoleInAct """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
+def get_all_roles(conn):
+    sql = """ SELECT * FROM Role """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
 
 
 def get_orders_by_customer(conn, cid):
@@ -592,11 +626,13 @@ def get_chair_by_thid(conn, thid):
     cur.execute(sql, (thid,))
     return cur.fetchall()
 
+
 def get_all_chairs(conn):
     sql = """ SELECT * FROM Chair """
     cur = conn.cursor()
     cur.execute(sql)
     return cur.fetchall()
+
 
 def get_names_of_actors_in_various_playes(conn):
     sql = """ SELECT DISTINCT Employees.Name FROM Employees
@@ -608,6 +644,7 @@ def get_names_of_actors_in_various_playes(conn):
     cur = conn.cursor()
     cur.execute(sql)
     return cur.fetchall()
+
 
 def get_actors_and_roles(conn):
     """
@@ -670,6 +707,7 @@ def get_coactors_by_actor_name(conn, actor_name):
     results = cur.fetchall()
     return results
 
+
 def get_performances_and_ticket_sales_by_date(conn, date):
     """
     Prints out performances on a given date and the number of tickets sold for each.
@@ -700,6 +738,7 @@ def get_performances_and_ticket_sales_by_date(conn, date):
     cur.execute(sql, (date,))
     results = cur.fetchall()
     return results
+
 
 def get_best_selling_performances(conn):
     """
