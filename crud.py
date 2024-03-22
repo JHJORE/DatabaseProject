@@ -95,7 +95,10 @@ def add_assigned_role(conn, assigned_role):
 def add_actor(conn, eid):
     sql = """ INSERT INTO Actor(EID) VALUES(?) """
     cur = conn.cursor()
-    cur.execute(sql, (eid,))
+    try:
+        cur.execute(sql, (eid,))
+    except:
+        pass
     conn.commit()
 
 
@@ -363,6 +366,7 @@ def get_segmentid_from_segment_and_play(conn, segment, play_id):
     cur.execute(sql, (segment, play_id))
     return cur.fetchone()
 
+
 def get_HasGroup_by_segment_and_playid(conn, segment, playid):
     sql = """ SELECT * FROM CustomerGroup
             INNER JOIN HasGroup ON CustomerGroup.SegmentID = HasGroup.SegmentID
@@ -484,6 +488,13 @@ def get_employees_by_roleid(conn, roleid):
 
 def get_all_actors(conn):
     sql = """ SELECT * FROM Actor """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
+def get_all_acts(conn):
+    sql = """ SELECT * FROM Acts """
     cur = conn.cursor()
     cur.execute(sql)
     return cur.fetchall()
@@ -693,17 +704,14 @@ def get_actors_and_roles(conn):
     - conn: SQLite database connection object
 
     Returns:
-    - A list of tuples containing (PlayName, ActorName, RoleName)
+    - A list of tuples containing ( ActorName, PlayName, RoleName)
     """
     sql = """
-    SELECT TheaterPlay.Name AS PlayName, Employees.Name AS ActorName, Role.Name AS RoleName
-    FROM TheaterPlay
-    JOIN PartOf ON TheaterPlay.PlayID = PartOf.PlayID
-    JOIN Acts ON PartOf.NumID = Acts.NumID
-    JOIN RoleInAct ON Acts.NumID = RoleInAct.NumID
-    JOIN Role ON RoleInAct.RoleID = Role.RoleID
-    JOIN Actor ON RoleInAct.NumID = Actor.EID
-    JOIN Employees ON Actor.EID = Employees.EID;
+    SELECT e.Name AS ActorName, r.Name AS RoleName
+    FROM Employees e
+    JOIN Actor a ON e.EID = a.EID
+    JOIN AssignedRole ar ON a.EID = ar.EID
+    JOIN Role r ON ar.RoleID = r.RoleID
     """
     cur = conn.cursor()
     cur.execute(sql)
