@@ -583,6 +583,166 @@ def get_names_of_actors_in_various_playes(conn):
     cur.execute(sql)
     return cur.fetchall()
 
+def get_actors_and_roles(conn):
+    """
+    Fetches the names of plays, actors, and their roles.
+
+    Parameters:
+    - conn: SQLite database connection object
+
+    Returns:
+    - A list of tuples containing (PlayName, ActorName, RoleName)
+    """
+    sql = """
+    SELECT TheaterPlay.Name AS PlayName, Employees.Name AS ActorName, Role.Name AS RoleName
+    FROM TheaterPlay
+    JOIN PartOf ON TheaterPlay.PlayID = PartOf.PlayID
+    JOIN Acts ON PartOf.NumID = Acts.NumID
+    JOIN RoleInAct ON Acts.NumID = RoleInAct.NumID
+    JOIN Role ON RoleInAct.RoleID = Role.RoleID
+    JOIN Actor ON RoleInAct.NumID = Actor.EID
+    JOIN Employees ON Actor.EID = Employees.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql)
+    results = cur.fetchall()
+    return results
+
+
+def get_coactors_by_actor_name(conn, actor_name):
+    """
+    Finds co-actors for the given actor name in the same act of plays.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - actor_name: The name of the actor
+
+    Returns:
+    - A list of tuples containing (Actor1, Actor2, PlayName)
+    """
+    sql = """
+    SELECT DISTINCT
+        e1.Name AS Actor1,
+        e2.Name AS Actor2,
+        tp.Name AS PlayName
+    FROM
+        Employees e1
+    JOIN Actor a1 ON e1.EID = a1.EID
+    JOIN RoleInAct ria1 ON a1.EID = ria1.NumID
+    JOIN Acts ac1 ON ria1.NumID = ac1.NumID
+    JOIN PartOf po1 ON ac1.NumID = po1.NumID
+    JOIN TheaterPlay tp ON po1.PlayID = tp.PlayID
+    JOIN PartOf po2 ON tp.PlayID = po2.PlayID
+    JOIN Acts ac2 ON po2.NumID = ac2.NumID
+    JOIN RoleInAct ria2 ON ac2.NumID = ria2.NumID
+    JOIN Actor a2 ON ria2.NumID = a2.EID
+    JOIN Employees e2 ON a2.EID = e2.EID
+    WHERE e1.Name = ? AND e1.EID <> e2.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (actor_name,))
+    results = cur.fetchall()
+    return results
+
+def get_performances_and_ticket_sales_by_date(conn, date):
+    """
+    Prints out performances on a given date and the number of tickets sold for each.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - date: The date for which to fetch performances and ticket sales (format: YYYY-MM-DD)
+    """
+    sql = """
+    SELECT 
+        TheaterPlay.Name AS PlayName,
+        Performance.Date,
+        IFNULL(COUNT(Ticket.TicketID), 0) AS TicketsSold
+    FROM 
+        Performance
+    LEFT JOIN 
+        Ticket ON Performance.PerformanceID = Ticket.PerformanceID
+    JOIN 
+        TheaterPlay ON Performance.PlayID = TheaterPlay.PlayID
+    WHERE 
+        Performance.Date = ?
+    GROUP BY 
+        Performance.PerformanceID
+    ORDER BY 
+        PlayName;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (date,))
+    results = cur.fetchall()
+    return results
+
+def get_best_selling_performances(conn):
+    """
+    Fetches performances sorted by the number of seats sold in descending order.
+
+    Parameters:
+    - conn: SQLite database connection object
+
+    Returns:
+    - A list of tuples containing (PlayName, Date, TicketsSold)
+    """
+    sql = """
+    SELECT 
+        TheaterPlay.Name AS PlayName,
+        Performance.Date,
+        COUNT(Ticket.TicketID) AS TicketsSold
+    FROM 
+        Ticket
+    JOIN 
+        Performance ON Ticket.PerformanceID = Performance.PerformanceID
+    JOIN 
+        TheaterPlay ON Performance.PlayID = TheaterPlay.PlayID
+    GROUP BY 
+        Performance.PerformanceID
+    ORDER BY 
+        TicketsSold DESC, Performance.Date;
+    """
+    cur = conn.cursor()
+    cur.execute(sql)
+    results = cur.fetchall()
+    return results
+
+
+def get_coactors_by_actor_eid(conn, actor_eid):
+    """
+    Finds co-actors for the given actor EID in the same act of plays.
+
+    Parameters:
+    - conn: SQLite database connection object
+    - actor_eid: The EID of the actor
+
+    Returns:
+    - A list of tuples containing (Actor1, Actor2, PlayName)
+    """
+    sql = """
+    SELECT DISTINCT
+        e.Name AS ActorName,
+        e2.Name AS CoActorName,
+        tp.Name AS PlayName
+    FROM
+        Actor a1
+    JOIN RoleInAct ria1 ON a1.EID = ria1.NumID
+    JOIN Acts ac1 ON ria1.NumID = ac1.NumID
+    JOIN PartOf po1 ON ac1.NumID = po1.NumID
+    JOIN TheaterPlay tp ON po1.PlayID = tp.PlayID
+    JOIN PartOf po2 ON tp.PlayID = po2.PlayID
+    JOIN Acts ac2 ON po2.NumID = ac2.NumID
+    JOIN RoleInAct ria2 ON ac2.NumID = ria2.NumID
+    JOIN Actor a2 ON ria2.NumID = a2.EID
+    JOIN Employees e ON a1.EID = e.EID
+    JOIN Employees e2 ON a2.EID = e2.EID
+    WHERE a1.EID = ? AND a1.EID <> a2.EID;
+    """
+    cur = conn.cursor()
+    cur.execute(sql, (actor_eid,))
+    results = cur.fetchall()
+    return results
+
+
 # Update -------------------------------------
 
 
