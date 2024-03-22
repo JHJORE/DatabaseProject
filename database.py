@@ -241,10 +241,10 @@ def make_tickets(conn):
 
     # Make customerProfile for pre-bought tickets
     c.add_customer(
-        conn, "12345678", "Ola Nordmann", "Osloveien 1"
+        conn, ("12345678", "Ola Nordmann", "Osloveien 1")
     )  # This will get the customerID 1
     c.add_order(
-        conn, "14:37", "2024-04-03", "Størst av alt er kjærligheten"
+        conn, ("14:37", "2024-04-03", "Størst av alt er kjærligheten")
     )  # This will get the orderID 1
 
     tickets_gs = process_seat_file(
@@ -363,22 +363,18 @@ def make_act_kongsnemnd(conn):
             rolename = row[1]
             actnum = row[2]
             actname = row[3]
+            numid = c.get_act_by_name(conn, actname)
+            if (
+                numid and numid[0] is not None
+            ):  # This checks if numid is not None or empty, and its first element is not None
+                roleid = c.get_role_by_name(conn, rolename)[0]
+
+                c.add_role_in_act(conn, numid[0], roleid)
             if rolename not in seen_roles:
                 # If not, add it to the database and the set of seen roles
                 c.add_role(conn, rolename)
 
                 seen_roles.add(rolename)
-
-                numid = c.get_act_by_name(conn, actname)
-                if (
-                    numid and numid[0] is not None
-                ):  # This checks if numid is not None or empty, and its first element is not None
-                    roleid = c.get_role_by_name(conn, rolename)[0]
-
-                    c.add_role_in_act(conn, numid[0], roleid)
-                else:
-
-                    pass
 
 
 def make_act_other(conn):
@@ -391,10 +387,10 @@ def make_act_other(conn):
             rolename = row[1]
             actnum = row[2]
             actname = row[3]
+            numid = c.get_act_by_name(conn, actname)[0]
+            roleid = c.get_role_by_name(conn, rolename)[0]
+            c.add_role_in_act(conn, numid, roleid)
             if rolename not in seen_roles:
                 # If not, add it to the database and the set of seen roles
                 c.add_role(conn, rolename)
                 seen_roles.add(rolename)
-                numid = c.get_act_by_name(conn, actname)[0]
-                roleid = c.get_role_by_name(conn, rolename)[0]
-                c.add_role_in_act(conn, numid, roleid)
