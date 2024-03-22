@@ -5,6 +5,7 @@ import database
 import crud as c
 import pandas as pd
 import checkseat
+import sqlite3
 
 
 def clear_screen():
@@ -25,8 +26,8 @@ def main_menu(conn):
             """
             1. Initialize Database and Insert Initial Data
             2. Does nothing
-            3. Check Chair Availability
-            4. Buy Tickets
+            3. Does nothing
+            4. Buy tickets
             5. Find performances and ticket sales by date
             6. What actors are playing in a given play
             7. Most popular play
@@ -46,14 +47,12 @@ def main_menu(conn):
         elif choice == "2":
             pass
         elif choice == "3":
+            pass
+        elif choice == "4":
             # Buy tickets
             buy_ticket_amount(conn)
-
-        elif choice == "4":
-            pass
         elif choice == "5":
             # 4. Find performances and ticket sales by date
-
             # get dates for the play
             date_times_kong = c.get_play_dates_times(conn, "Kongsemnene")
             date_times_kong_df = pd.DataFrame(date_times_kong, columns=["Date", "Time"])
@@ -81,9 +80,10 @@ def main_menu(conn):
                 print("No performances found for this date.")
 
         elif choice == "6":
+            # 5. What actors are playing in a given play
             actors_and_roles = c.get_actors_and_roles(conn)
-            for play, actor, role in actors_and_roles:
-                print(f"{actor} is playing {role} in {play}")
+            for actor, role in actors_and_roles:
+                print(f"{actor} is playing {role} ")
         elif choice == "7":
             # 6. Most popular play
             print("fetching most popular play...")
@@ -513,9 +513,6 @@ def prompt_user_for_actor(conn):
     return chosen_actor, selected_actor_eid
 
 
-import sqlite3
-
-
 def check_db_initialized(db_path="theater.db"):
     try:
         # Attempt to connect to the database
@@ -536,8 +533,3 @@ def check_db_initialized(db_path="theater.db"):
             return True
     except sqlite3.Error as e:
         return f"An error occurred: {e}"
-
-
-# Example usage
-message = check_db_initialized()
-print(message)

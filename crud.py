@@ -500,6 +500,20 @@ def get_all_acts(conn):
     return cur.fetchall()
 
 
+def get_all_part_of(conn):
+    sql = """ SELECT * FROM PartOf """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
+def get_all_roles_in_act(conn):
+    sql = """ SELECT * FROM RoleInAct """
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
 def get_all_employees(conn):
     sql = """ SELECT * FROM Employees """
     cur = conn.cursor()
