@@ -7,7 +7,6 @@ import pandas as pd
 import checkseat
 
 
-
 def clear_screen():
     # For Windows
     if os.name == "nt":
@@ -42,7 +41,7 @@ def main_menu(conn):
             if check_db_initialized():
                 database.initialize_db()
                 database.fill_db()
-                clear_screen()
+                # clear_screen()
 
         elif choice == "2":
             # Insert data
@@ -62,7 +61,7 @@ def main_menu(conn):
             # Check Chair Availability
             # check_chair_availability(conn)
             # Read data from the text files
-            
+
             buy_ticket_amount(conn)
 
         elif choice == "4":
@@ -129,16 +128,17 @@ def main_menu(conn):
         else:
             print("Invalid choice. Please choose again.")
 
+
 def buy_ticket_amount(conn):
     finished = False
     while not finished:
         play_picked = input(
-            "What play do you want to check?\n1: Kongsemnene (Playing in Hovedscenen) \n2: Storst av alt er kjærligheten (Playing in Gamle scene)\n:"
+            "What play do you want to check?\n1: Kongsemnene (Playing in Hovedscenen) \n2: Størst av alt er kjærligheten (Playing in Gamle scene)\n:"
         )
         if play_picked == "1":
             play = "Kongsemnene"
         elif play_picked == "2":
-            play = "Storst av alt er kjærligheten"
+            play = "Størst av alt er kjærligheten"
         else:
             print("Invalid choice. Please choose again.")
             break
@@ -148,13 +148,19 @@ def buy_ticket_amount(conn):
         date_times_df = pd.DataFrame(date_times, columns=["Date", "Time"])
         selected_date, selected_time = prompt_user_for_datetime_from_df(date_times_df)
         amount = prompt_user_for_amount()
-        checkseat.check_seat_availibity(conn, amount, play, selected_date, selected_time)
-
+        checkseat.check_row_availability(
+            conn, amount, play, selected_date, selected_time
+        )
+        print("Do you want to check availability for another play or performance?")
+        choice = input("1: Yes\n2: No\n:")
+        if choice == "2":
+            finished = True
 
 
 def prompt_user_for_amount():
     date_choice = int(input("Please enter the amount of tickets you want in a row:"))
     return date_choice
+
 
 def process_seat_file(file_path, play_name, theater_hall_name):
     with open(file_path, "r") as file:

@@ -312,6 +312,13 @@ def get_performance_by_date_and_playname(conn, date, playname):
     return cur.fetchone()
 
 
+def get_performance_by_date_and_playid(conn, date, playid):
+    sql = """ SELECT * FROM Performance WHERE Date=? AND PlayID=? """
+    cur = conn.cursor()
+    cur.execute(sql, (date, playid))
+    return cur.fetchone()
+
+
 def get_performances_by_playid(conn, playid):
     sql = """ SELECT * FROM Performance WHERE PlayID=? """
     cur = conn.cursor()
