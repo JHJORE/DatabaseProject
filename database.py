@@ -238,6 +238,15 @@ def make_employees(conn):
 
 
 def make_tickets(conn):
+
+    # Make customerProfile for pre-bought tickets
+    c.add_customer(
+        conn, "12345678", "Ola Nordmann", "Osloveien 1"
+    )  # This will get the customerID 1
+    c.add_order(
+        conn, "14:37", "2024-04-03", "Størst av alt er kjærligheten"
+    )  # This will get the orderID 1
+
     tickets_gs = process_seat_file(
         "files needed/gamle-scene.txt",
         "Størst av alt er kjærligheten",
