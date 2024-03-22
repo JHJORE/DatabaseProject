@@ -38,9 +38,12 @@ def main_menu(conn):
 
 
         if choice == '1':
-            database.initialize_db()
-            database.fill_db()
-            clear_screen()
+            if check_db_initialized:
+                database.initialize_db()
+                database.fill_db()
+                clear_screen()
+            else:
+                print("already initliazed")
 
         elif choice == "2":
             # Insert data
@@ -205,3 +208,28 @@ def manage_employees():
 
     print("Employee Management")
     
+import sqlite3
+
+def check_db_initialized(db_path='theater.db'):
+    try:
+        # Attempt to connect to the database
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        
+        # Query the database for all tables
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cur.fetchall()
+        conn.close()
+
+        # Check if tables exist
+        if tables:
+            print("Database initialization aborted: The database already exists and contains tables.")
+            return False
+        else:
+            return True
+    except sqlite3.Error as e:
+        return f"An error occurred: {e}"
+
+# Example usage
+message = check_db_initialized()
+print(message)
